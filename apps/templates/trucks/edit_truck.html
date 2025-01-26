@@ -10,7 +10,7 @@
   <div class="container-fluid">
     <div class="header-body">
       <div class="row align-items-center py-4">
-        <div class="col-lg-6 col-7">
+        <div class="col-lg-9 col-9">
           <h6 class="h2 text-white d-inline-block mb-0">Modifier le camion</h6>
           <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
             <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
@@ -19,7 +19,7 @@
               </li>
               <li class="breadcrumb-item"><a href="">Camions</a></li>
               <li class="breadcrumb-item"><a href="/trucks/manage_trucks.html">Gérer les camions</a></li>
-              <li class="breadcrumb-item active" aria-current="page">Modifier le camion</li>
+              <li class="breadcrumb-item active" aria-current="page">Modifier le camion / {{ form.name_truck.value }}</li>
             </ol>
           </nav>
         </div>
@@ -31,7 +31,7 @@
 <div class="container-fluid mt--6">
   <div class="card mb-4">
     <div class="card-header">
-      <h3 class="mb-0">Modifier le camion</h3>
+      <h3 class="mb-0">Modifier le camion : {{ form.name_truck.value }}</h3>
     </div>
     <div class="card-body">
       <form method="POST">

@@ -25,6 +25,7 @@ urlpatterns = [
     path('get-delivery-details/<str:delivery_id>/', get_delivery_details, name='get_delivery_details'),
     path('delay/delaymanage.html', views.delaymanage, name='delaymanage'),
     path('delay/delaydelete/<str:delivery_id>/', views.delaydelete, name='delaydelete'),
+    path('delay/delayupdate/<str:delivery_id>/', views.delayupdate, name='delayupdate'),
     path('home/managedeliverynow.html', views.managedeliverynow, name='managedeliverynow'),
     path('home/deliverynow_1.html', views.deliverynow_1, name='deliverynow_1'),
     path('home/deliveryaccept/<str:delivery_id>/', views.deliveryaccept, name='deliveryaccept'),

@@ -69,15 +69,24 @@
                                 <td>{{ delivery.delay }} min</td>
                                 <td class="table-actions">
                                     <a
-                                    href="{% url 'delaydelete' delivery.id %}"
-                                    style="color: red; font-size: 17px"
-                                    class="table-action table-action-delete"
-                                    data-toggle="tooltip"
-                                    title="Suppression"
-                                    onclick="confirmDelete(event, this.href)"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                                        href="{% url 'delayupdate' delivery.id %}"
+                                        style="color: blue; font-size: 17px"
+                                        class="table-action"
+                                        data-toggle="tooltip"
+                                        title="Modifier"
+                                    >
+                                        <i class="fas fa-pen-square"></i>
+                                    </a>
+                                <a
+                                href="{% url 'delaydelete' delivery.id %}"
+                                style="color: red; font-size: 17px"
+                                class="table-action table-action-delete"
+                                data-toggle="tooltip"
+                                title="Suppression"
+                                onclick="confirmDelete(event, this.href)"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </a>
                                 </td>
                             </tr>
                             {% endfor %}

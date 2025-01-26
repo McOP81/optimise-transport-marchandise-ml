@@ -9,13 +9,26 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Truck, Delivery
 from django.contrib import messages
 from django.utils.timezone import now
-from .forms import TruckForm,DeliveryForm
+from .forms import TruckForm, DeliveryForm
 from datetime import datetime, date
 from django.utils import timezone
 from django.http import JsonResponse
 from django.db.models import Q, Count, Min
 from datetime import timedelta
 from django.db.models.functions import ExtractMonth, ExtractWeekDay
+import pandas as pd
+import joblib
+from sklearn.preprocessing import LabelEncoder
+import os
+from django.conf import settings
+
+
+# Charger le modèle de machine learning
+MODEL_PATH = os.path.join(settings.BASE_DIR, 'random_forest_model.pkl')
+model = joblib.load(MODEL_PATH)
+
+# Initialiser le LabelEncoder
+label_encoder = LabelEncoder()
 
 @login_required(login_url="/login/")
 def index(request):
@@ -43,7 +56,7 @@ def pages(request):
 @login_required(login_url="/login/")
 def manage_trucks(request):
     trucks = Truck.objects.all()
-    return render(request, 'trucks/manage_trucks.html',{'trucks': trucks,'today': now().date(),'segment': 'manage_trucks'})
+    return render(request, 'trucks/manage_trucks.html', {'trucks': trucks, 'today': now().date(), 'segment': 'manage_trucks'})
 
 @login_required(login_url="/login/")
 def delete_truck(request, truck_id):
@@ -59,7 +72,7 @@ def add_truck(request):
     if request.method == "POST":
         name_truck = request.POST.get('name_truck')
         registration_number = request.POST.get('registration_number')
-        model = request.POST.get('model')
+        model_truck = request.POST.get('model')
         location = request.POST.get('location')
         phone = request.POST.get('phone')
         tonnage = request.POST.get('tonnage')
@@ -74,7 +87,7 @@ def add_truck(request):
         truck = Truck(
             name_truck=name_truck,
             registration_number=registration_number,
-            model=model,
+            model=model_truck,
             location=location,
             phone=phone,
             tonnage=tonnage,
@@ -120,12 +133,7 @@ def edit_truck(request, truck_id):
         'form': form,
         'truck': truck,
     })
-
-@login_required(login_url="/login/")
-def deliveryadd(request):
-    trucks = Truck.objects.all()
-    return render(request, 'home/deliveryadd.html',{'trucks': trucks,'segment': 'deliveryadd'})
-
+    
 @login_required(login_url="/login/")
 def delivery_manage(request):
     deliveries = Delivery.objects.select_related('truck').all()
@@ -160,6 +168,13 @@ def delete_delivery(request, delivery_id):
 @login_required(login_url="/login/")
 def deliveryadd(request):
     trucks = Truck.objects.all()
+
+    if not hasattr(label_encoder, 'classes_'):
+        cities = Delivery.objects.values_list('departure_city', flat=True).distinct().union(
+            Delivery.objects.values_list('arrival_city', flat=True).distinct()
+        )
+        label_encoder.fit(cities)
+
     if request.method == "POST":
         name_truck_id = request.POST.get('name_truck')
         locationstart = request.POST.get('locationstart')
@@ -168,17 +183,47 @@ def deliveryadd(request):
         dateend_str = request.POST.get('dateend')
         phone = request.POST.get('phone')
         tonnage = request.POST.get('tonnage')
-        loaded_trip = request.POST.get('loaded_trip') == "on"
+
         if not (name_truck_id and locationstart and locationend and datestart_str and dateend_str):
             messages.error(request, "Veuillez remplir tous les champs obligatoires.")
             return redirect('deliveryadd')
+
         if datestart_str > dateend_str:
             messages.error(request, "La date de départ doit être antérieure ou égale à la date d'arrivée.")
             return redirect('deliveryadd')
+
         truck = get_object_or_404(Truck, id=name_truck_id)
         if int(tonnage) > truck.tonnage:
             messages.error(request, "Le tonnage de la livraison doit être inférieur ou égal au tonnage du camion.")
             return redirect('deliveryadd')
+
+        departure_date = datetime.strptime(datestart_str, "%Y-%m-%dT%H:%M")
+        arrival_date = datetime.strptime(dateend_str, "%Y-%m-%dT%H:%M")
+
+        duration_hours = (arrival_date - departure_date).total_seconds() / 3600
+        duration_days = duration_hours / 24
+
+        input_data = pd.DataFrame({
+            'departure_city': [locationstart],
+            'arrival_city': [locationend],
+            'duration_hours': [duration_hours],
+            'tonnage': [int(tonnage)],
+            'duration_days': [duration_days],
+        })
+
+        try:
+            input_data['departure_city'] = label_encoder.transform([locationstart])[0]
+            input_data['arrival_city'] = label_encoder.transform([locationend])[0]
+        except ValueError as e:
+            messages.error(request, f"Erreur lors de l'encodage des villes : {str(e)}")
+            return redirect('deliveryadd')
+
+        try:
+            loaded_trip = model.predict(input_data)[0]
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la prédiction : {str(e)}")
+            return redirect('deliveryadd')
+
         timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
         last_id = Delivery.objects.count() + 1
         custom_id = f"RF{last_id}{timestamp}"
@@ -186,16 +231,18 @@ def deliveryadd(request):
             id=custom_id,
             departure_city=locationstart,
             arrival_city=locationend,
-            departure_date=datestart_str,
-            arrival_date=dateend_str,
+            departure_date=departure_date,  
+            arrival_date=arrival_date,      
             phone_number=phone,
             tonnage=tonnage,
-            loaded_trip=loaded_trip,
+            loaded_trip=bool(loaded_trip),
             truck=truck
         )
         delivery.save()
+
         messages.success(request, "La livraison a été ajoutée avec succès !")
         return redirect('deliveryadd')
+
     return render(request, 'home/deliveryadd.html', {'trucks': trucks, 'segment': 'deliveryadd'})
 
 @login_required(login_url="/login/")
@@ -218,7 +265,7 @@ def deliveryedit(request, delivery_id):
         'form': form,
         'delivery': delivery,
     })
-    
+
 def get_occupied_dates(request, truck_id):
     try:
         departure_city = request.GET.get('departure_city')
@@ -238,14 +285,13 @@ def get_occupied_dates(request, truck_id):
             occupied_ranges.append({
                 'start': start_block.strftime('%Y-%m-%d %H:%M'),
                 'end': end_block.strftime('%Y-%m-%d %H:%M'),
-                'duration':str(duration)
+                'duration': str(duration)
             })
         return JsonResponse(occupied_ranges, safe=False)
     except Exception as e:
         print(f"Erreur dans get_occupied_dates: {e}")
         return JsonResponse({'error': str(e)}, status=500)
-    
-    
+
 @login_required(login_url="/login/")
 def map_delivery(request, delivery_id):
     delivery = get_object_or_404(Delivery, id=delivery_id)
@@ -277,6 +323,28 @@ def delayadd(request):
         return redirect('delayadd')
     deliveries = Delivery.objects.filter(delay__isnull=True)
     return render(request, 'delay/delayadd.html', {'deliveries': deliveries, 'segment': 'delayadd'})
+
+@login_required(login_url="/login/")
+def delayupdate(request, delivery_id):
+    delivery = get_object_or_404(Delivery, id=delivery_id)
+
+    if request.method == "POST":
+        delay = request.POST.get('delay')
+
+        if not delay:
+            messages.error(request, "Veuillez entrer un retard valide.")
+            return redirect('delayupdate', delivery_id=delivery_id)
+        
+        delivery.delay = delay
+        delivery.save()
+
+        messages.success(request, "Le retard a été mis à jour avec succès.")
+        return redirect('delaymanage')
+
+    return render(request, 'delay/delayupdate.html', {
+        'delivery': delivery,
+        'segment': 'delayupdate'
+    })
 
 @login_required(login_url="/login/")
 def get_delivery_details(request, delivery_id):
@@ -327,7 +395,7 @@ def delaydelete(request, delivery_id):
 @login_required(login_url="/login/")
 def managedeliverynow(request):
     today = timezone.now().date()
-    deliveries = Delivery.objects.filter(departure_date__date=today) | Delivery.objects.filter(arrival_date__date=today)   
+    deliveries = Delivery.objects.filter(departure_date__date=today) | Delivery.objects.filter(arrival_date__date=today)
     formatted_deliveries = []
     for delivery in deliveries:
         duration_hours = None
@@ -347,7 +415,7 @@ def managedeliverynow(request):
             'phone_number': delivery.phone_number,
             'tonnage': delivery.tonnage,
             'loaded_trip': delivery.loaded_trip,
-            'arrival_delivery' : delivery.arrival_delivery,
+            'arrival_delivery': delivery.arrival_delivery,
         }
         formatted_deliveries.append(formatted_delivery)
     return render(request, 'home/managedeliverynow.html', {'deliveries': formatted_deliveries, 'segment': 'managedeliverynow'})
@@ -359,7 +427,7 @@ def index(request):
     deliveries_this_month = Delivery.objects.filter(
         departure_date__year=now.year,
         departure_date__month=now.month,
-        arrival_delivery=1 
+        arrival_delivery=1
     ).count()
     deliveries_this_month_loaded = Delivery.objects.filter(
         departure_date__year=now.year,
@@ -439,7 +507,7 @@ def index(request):
 @login_required(login_url="/login/")
 def deliverynow_1(request):
     today = timezone.now().date()
-    deliveries = Delivery.objects.filter(arrival_date__date=today)   
+    deliveries = Delivery.objects.filter(arrival_date__date=today)
     formatted_deliveries = []
     for delivery in deliveries:
         duration_hours = None
@@ -459,7 +527,7 @@ def deliverynow_1(request):
             'phone_number': delivery.phone_number,
             'tonnage': delivery.tonnage,
             'loaded_trip': delivery.loaded_trip,
-            'arrival_delivery' : delivery.arrival_delivery,
+            'arrival_delivery': delivery.arrival_delivery,
         }
         formatted_deliveries.append(formatted_delivery)
     return render(request, 'home/deliverynow_1.html', {'deliveries': formatted_deliveries, 'segment': 'deliverynow_1'})

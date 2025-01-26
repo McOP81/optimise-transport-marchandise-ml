@@ -1,0 +1,114 @@
+{% extends 'layouts/base.html' %} 
+{% block title %} Modifier un retard {% endblock title %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+{% endblock stylesheets %} 
+
+{% block content %}
+
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-9 col-9">
+          <h6 class="h2 text-white d-inline-block mb-0">Modifier un retard</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+              <li class="breadcrumb-item">
+                <a href="/"><i class="fas fa-home"></i></a>
+              </li>
+              <li class="breadcrumb-item"><a href="">Retards</a></li>
+              <li class="breadcrumb-item"><a href="/delay/delaymanage.html">Gérer les retards</a></li>
+              <li class="breadcrumb-item active" aria-current="page">
+                Modifier un retard / {{ delivery.id }}
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt--6">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3 class="mb-0">Modifier le retard : {{ delivery.id }}</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="id_Deliveries">Id Livraison</label>
+              <input class="form-control" type="text" value="{{ delivery.id }}" disabled />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="locationstart">Ville de départ</label>
+              <input class="form-control" type="text" value="{{ delivery.departure_city }}" disabled />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="locationend">Ville d'arrivée</label>
+              <input class="form-control" type="text" value="{{ delivery.arrival_city }}" disabled />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="datestart">Date de départ</label>
+              <input class="form-control" type="datetime-local" value="{{ delivery.departure_date|date:'Y-m-d\TH:i' }}" disabled />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="dateend">Date d'arrivée</label>
+              <input class="form-control" type="datetime-local" value="{{ delivery.arrival_date|date:'Y-m-d\TH:i' }}" disabled />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="tonnage">Tonnage (Kg)</label>
+              <input class="form-control" type="number" value="{{ delivery.tonnage }}" disabled />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="delay">Retard (min)</label>
+              <input class="form-control" name="delay" type="number" placeholder="Retard (min)" id="delay" value="{{ delivery.delay }}" required />
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Mettre à jour</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message }}',
+        showConfirmButton: true,
+        timer: 3000
+      });
+    {% endfor %}
+  {% endif %}
+</script>
+
+{% endblock javascripts %}
