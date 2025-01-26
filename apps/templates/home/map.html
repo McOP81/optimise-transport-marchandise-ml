@@ -1,0 +1,86 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Cartes {% endblock title %}
+
+{% block content %}
+
+    <!-- Header -->
+    <div class="header bg-primary pb-6">
+      <div class="container-fluid">
+        <div class="header-body">
+          <div class="row align-items-center py-4">
+            <div class="col-lg-9 col-9">
+              <h6 class="h2 text-white d-inline-block mb-0">Carte</h6>
+              <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/home/managedeliverynow.html">Livraisons aujourd'hui</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Carte / {{ delivery.id }} / {{ departure_city }} vers {{ arrival_city }}</li>
+                </ol>
+            </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid mt--6">
+      <div class="row">
+        <div class="col">
+          <div class="card border-0">
+            {% comment %} Agadir {% endcomment %}
+            {% if departure_city == "Agadir" and arrival_city == "Marrakech" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/agadir_to_Marrakech.html"%}</div>
+            {% elif  departure_city == "Agadir" and arrival_city == "Casablanca" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/agadir_to_casa.html"%}</div>
+            {% elif  departure_city == "Agadir" and arrival_city == "Rabat" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/agadir_to_rabat.html"%}</div>
+            {% elif  departure_city == "Agadir" and arrival_city == "Tanger" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/agadir_to_tanger.html"%}</div>
+            {% comment %} Casablanca {% endcomment %}
+            {% elif  departure_city == "Casablanca" and arrival_city == "Agadir" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/casa_to_agdir.html"%}</div>
+            {% elif  departure_city == "Casablanca" and arrival_city == "Marrakech" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/casa_to_Marrakech.html"%}</div>
+            {% elif  departure_city == "Casablanca" and arrival_city == "Rabat" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/casa_to_rabat.html"%}</div>
+            {% elif  departure_city == "Casablanca" and arrival_city == "Tanger" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/casa_to_tanger.html"%}</div>
+            {% comment %} Marrakech {% endcomment %}
+            {% elif  departure_city == "Marrakech" and arrival_city == "Agadir" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/marrakech_to_agadir.html"%}</div>
+            {% elif  departure_city == "Marrakech" and arrival_city == "Casablanca" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/marrakech_to_casa.html"%}</div>
+            {% elif  departure_city == "Marrakech" and arrival_city == "Rabat" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/marrakech_to_rabat.html"%}</div>
+            {% elif  departure_city == "Marrakech" and arrival_city == "Tanger" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/marrakech_to_tanger.html"%}</div>
+            {% comment %} Rabat {% endcomment %}
+            {% elif  departure_city == "Rabat" and arrival_city == "Agadir" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/rabat_to_agadir.html"%}</div>
+            {% elif  departure_city == "Rabat" and arrival_city == "Casablanca" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/rabat_to_casa.html"%}</div>
+            {% elif  departure_city == "Rabat" and arrival_city == "Marrakech" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/rabat_to_marrakech.html"%}</div>
+            {% elif  departure_city == "Rabat" and arrival_city == "Tanger" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/rabat_to_tanger.html"%}</div>
+            {% comment %} Tanger {% endcomment %}
+            {% elif  departure_city == "Tanger" and arrival_city == "Agadir" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/tanger_to_agadir.html"%}</div>
+            {% elif  departure_city == "Tanger" and arrival_city == "Casablanca" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/tanger_to_casa.html"%}</div>
+            {% elif  departure_city == "Tanger" and arrival_city == "Marrakech" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/tanger_to_marrakech.html"%}</div>
+            {% elif  departure_city == "Tanger" and arrival_city == "Rabat" %}
+            <div id="map-default" class="map-canvas" style="height: 600px;">{% include "maps/tanger_to_rabat.html"%}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% include "includes/footer.html" %}
+      
+    </div>
+
+{% endblock content %}
+{% block javascripts %}
+{% endblock javascripts %}

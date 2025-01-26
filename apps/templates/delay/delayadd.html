@@ -1,0 +1,200 @@
+{% extends 'layouts/base.html' %} 
+{% block title %} Ajouter un retard {% endblock title %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+  #locationstart, #locationend, #datestart, #dateend, #tonnage, #delay, label[for="locationstart"], label[for="locationend"], label[for="datestart"],
+  label[for="dateend"], label[for="tonnage"], label[for="delay"]  {
+    display: none;
+  }
+</style>
+{% endblock stylesheets %} 
+
+{% block content %}
+
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-6 col-7">
+          <h6 class="h2 text-white d-inline-block mb-0">Ajouter un retard</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+              <li class="breadcrumb-item">
+                <a href="/"><i class="fas fa-home"></i></a>
+              </li>
+              <li class="breadcrumb-item"><a href="">Retards</a></li>
+              <li class="breadcrumb-item active" aria-current="page">
+                Ajouter un retard
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt--6">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3 class="mb-0">Ajouter un nouveau retard</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="id_Deliveries">Id Livraisons</label>
+              <select name="id_Deliveries" class="form-control" id="id_Deliveries" required>
+                <option value="">Choisissez un</option>
+                {% for delivery in deliveries %}
+                <option value="{{ delivery.id }}">{{ delivery.id }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="locationstart">Ville de départ</label>
+              <select name="locationstart" class="form-control" id="locationstart" disabled >
+                <option value="">Choisissez une</option>
+                <option value="Agadir">Agadir</option>
+                <option value="Marrakech">Marrakech</option>
+                <option value="Casablanca">Casablanca</option>
+                <option value="Rabat">Rabat</option>
+                <option value="Tanger">Tanger</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="locationend">Ville d'arrivée</label>
+              <select name="locationend" class="form-control" id="locationend" disabled >
+                <option value="">Choisissez une</option>
+                <option value="Agadir">Agadir</option>
+                <option value="Marrakech">Marrakech</option>
+                <option value="Casablanca">Casablanca</option>
+                <option value="Rabat">Rabat</option>
+                <option value="Tanger">Tanger</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="datestart">Date de départ</label>
+              <input class="form-control" name="datestart" type="datetime-local" id="datestart" disabled />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="dateend">Date d'arrivée</label>
+              <input class="form-control" name="dateend" type="datetime-local" id="dateend" disabled />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="tonnage">Tonnage (Kg)</label>
+              <input class="form-control" name="tonnage" type="number" placeholder="Tonnage (Kg)" id="tonnage" disabled />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="delay">Delay (min)</label>
+              <input class="form-control" name="delay" type="number" placeholder="Retard (min)" id="delay" required />
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+<!-- SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Afficher les messages Django avec SweetAlert
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message }}',
+        showConfirmButton: true,
+        timer: 3000
+      });
+    {% endfor %}
+  {% endif %}
+</script>
+<script>
+  document.getElementById('id_Deliveries').addEventListener('change', function() {
+    var deliveryId = this.value; 
+
+    if (deliveryId) {
+      fetch(`/get-delivery-details/${deliveryId}/`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des détails de la livraison');
+          }
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById('locationstart').style.display = 'block';
+          document.getElementById('locationend').style.display = 'block';
+          document.getElementById('datestart').style.display = 'block';
+          document.getElementById('dateend').style.display = 'block';
+          document.getElementById('tonnage').style.display = 'block';
+          document.getElementById('delay').style.display = 'block';
+
+          document.querySelector('label[for="locationstart"]').style.display = 'block';
+          document.querySelector('label[for="locationend"]').style.display = 'block';
+          document.querySelector('label[for="datestart"]').style.display = 'block';
+          document.querySelector('label[for="dateend"]').style.display = 'block';
+          document.querySelector('label[for="tonnage"]').style.display = 'block';
+          document.querySelector('label[for="delay"]').style.display = 'block';
+
+          document.getElementById('locationstart').value = data.departure_city;
+          document.getElementById('locationend').value = data.arrival_city;
+          document.getElementById('datestart').value = data.departure_date;
+          document.getElementById('dateend').value = data.arrival_date;
+          document.getElementById('tonnage').value = data.tonnage;
+
+          document.getElementById('delay').removeAttribute('disabled');
+        })
+        .catch(error => {
+          console.error('Erreur lors de la récupération des détails de la livraison:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Une erreur s\'est produite lors de la récupération des détails de la livraison.',
+          });
+        });
+    } else {
+      document.getElementById('locationstart').style.display = 'none';
+      document.getElementById('locationend').style.display = 'none';
+      document.getElementById('datestart').style.display = 'none';
+      document.getElementById('dateend').style.display = 'none';
+      document.getElementById('tonnage').style.display = 'none';
+      document.getElementById('delay').style.display = 'none';
+
+      document.querySelector('label[for="locationstart"]').style.display = 'none';
+      document.querySelector('label[for="locationend"]').style.display = 'none';
+      document.querySelector('label[for="datestart"]').style.display = 'none';
+      document.querySelector('label[for="dateend"]').style.display = 'none';
+      document.querySelector('label[for="tonnage"]').style.display = 'none';
+      document.querySelector('label[for="delay"]').style.display = 'none';
+    }
+  });
+</script>
+{% endblock javascripts %}

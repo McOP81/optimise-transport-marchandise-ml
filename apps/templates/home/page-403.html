@@ -1,0 +1,31 @@
+{% extends 'layouts/base-fullscreen.html' %}
+
+{% block title %} Erreur 403 {% endblock title %}
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="container mt--8 pb-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+          <div class="card bg-secondary shadow border-0">
+            <div class="card-header bg-transparent pb-5">
+
+              <div class="text-muted text-center mt-2 mb-3">
+                Oups ! Erreur 403      
+              </div>
+
+              <div class="text-center mb-4">
+                Accès refusé - S'authentifier <a href="{% url 'login' %}">Se connecter</a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock content %}
+
+{% block javascripts %}{% endblock javascripts %}

@@ -1,0 +1,125 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Modifier le camion {% endblock title %}
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-6 col-7">
+          <h6 class="h2 text-white d-inline-block mb-0">Modifier le camion</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+              <li class="breadcrumb-item">
+                <a href="/"><i class="fas fa-home"></i></a>
+              </li>
+              <li class="breadcrumb-item"><a href="">Camions</a></li>
+              <li class="breadcrumb-item"><a href="/trucks/manage_trucks.html">Gérer les camions</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Modifier le camion</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt--6">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3 class="mb-0">Modifier le camion</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="name_truck">Nom du camion</label>
+              <input type="text" name="name_truck" class="form-control" id="name_truck" value="{{ form.name_truck.value }}" placeholder="Nom du camion" />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="registration_number">Numéro d'immatriculation</label>
+              <input type="text" name="registration_number" class="form-control" id="registration_number" value="{{ form.registration_number.value }}" placeholder="Numéro d'immatriculation" />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="model">Modèle</label>
+              <input type="text" name="model" class="form-control" id="model" value="{{ truck.model }}" placeholder="Modèle" />
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="location">Ville</label>
+              <select name="location" class="form-control" id="location">
+                <option value="">Choisissez une</option>
+                <option value="Agadir" {% if truck.location == 'Agadir' %}selected{% endif %}>Agadir</option>
+                <option value="Marrakech" {% if truck.location == 'Marrakech' %}selected{% endif %}>Marrakech</option>
+                <option value="Casablanca" {% if truck.location == 'Casablanca' %}selected{% endif %}>Casablanca</option>
+                <option value="Rabat" {% if truck.location == 'Rabat' %}selected{% endif %}>Rabat</option>
+                <option value="Tanger" {% if truck.location == 'Tanger' %}selected{% endif %}>Tanger</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="phone">N° de téléphone</label>
+              <input type="tel" name="phone" class="form-control" id="phone" value="{{ truck.phone }}" placeholder="0XXXXXXXXX" />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="tonnage">Tonnage maximum (Kg)</label>
+              <input class="form-control" name="tonnage" type="number" id="tonnage" value="{{ truck.tonnage }}" placeholder="Tonnage maximum (Kg)" />
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="insurance_date">Date d'assurance</label>
+              <input class="form-control" name="insurance_date" type="date" id="insurance_date" value="{{ truck.insurance_date|date:'Y-m-d' }}" />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="gray_card_date">Date de carte grise</label>
+              <input class="form-control" name="gray_card_date" type="date" id="gray_card_date" value="{{ truck.gray_card_date|date:'Y-m-d' }}" />
+            </div>
+          </div> 
+        </div>        
+        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script src="/static/assets/vendor/clipboard/dist/clipboard.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  {% if messages %}
+   {% for message in messages %}
+     Swal.fire({
+       icon: '{{ message.tags }}',
+       title: '{{ message }}',
+       showConfirmButton: true,
+       timer: 3000
+     });
+   {% endfor %}
+ {% endif %}
+</script>
+{% endblock javascripts %}

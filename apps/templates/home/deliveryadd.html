@@ -1,0 +1,233 @@
+{% extends 'layouts/base.html' %}
+{% block title %} Ajouter une livraison {% endblock title %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-6 col-7">
+          <h6 class="h2 text-white d-inline-block mb-0">Ajouter une livraison</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+              <li class="breadcrumb-item">
+                <a href="/"><i class="fas fa-home"></i></a>
+              </li>
+              <li class="breadcrumb-item"><a href="">Livraisons</a></li>
+              <li class="breadcrumb-item active" aria-current="page">
+                Ajouter une livraison
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt--6">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3 class="mb-0">Ajouter une nouvelle livraison</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="name_truck">Nom du camion</label>
+              <select name="name_truck" class="form-control" id="name_truck" required>
+                <option value="">Choisissez un</option>
+                {% for truck in trucks %}
+                <option value="{{ truck.id }}">{{ truck.name_truck }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="locationstart">Ville de départ</label>
+              <select name="locationstart" class="form-control" id="locationstart" required>
+                <option value="">Choisissez une</option>
+                <option value="Agadir">Agadir</option>
+                <option value="Marrakech">Marrakech</option>
+                <option value="Casablanca">Casablanca</option>
+                <option value="Rabat">Rabat</option>
+                <option value="Tanger">Tanger</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="locationend">Ville d'arrivée</label>
+              <select name="locationend" class="form-control" id="locationend" required>
+                <option value="">Choisissez une</option>
+                <option value="Agadir">Agadir</option>
+                <option value="Marrakech">Marrakech</option>
+                <option value="Casablanca">Casablanca</option>
+                <option value="Rabat">Rabat</option>
+                <option value="Tanger">Tanger</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="datestart">Date de départ</label>
+              <input class="form-control" name="datestart" type="datetime-local" id="datestart" required />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="dateend">Date d'arrivée</label>
+              <input class="form-control" name="dateend" type="datetime-local" id="dateend" required />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="phone">N° de téléphone</label>
+              <input type="tel" name="phone" class="form-control" id="phone" placeholder="0XXXXXXXXX" required />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="tonnage">Tonnage (Kg)</label>
+              <input class="form-control" name="tonnage" type="number" placeholder="Tonnage (Kg)" id="tonnage" required />
+            </div>
+          </div>
+          <div class="custom-control custom-control-alternative custom-checkbox" style="padding: 40px; left: 150px">
+            <input class="custom-control-input" id="customCheckLogin" name="loaded_trip" type="checkbox" />
+            <label class="custom-control-label" for="customCheckLogin">
+              <span class="text-muted">Voyage chargé</span>
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message }}',
+        showConfirmButton: true,
+        timer: 4000
+      });
+    {% endfor %}
+  {% endif %}
+</script>
+<script>
+  document.getElementById('locationstart').addEventListener('change', function() {
+    var departureCity = this.value;
+    var arrivalSelect = document.getElementById('locationend');
+    
+    arrivalSelect.innerHTML = '<option value="">Choisissez une</option>';
+    
+    var cities = ["Agadir", "Marrakech", "Casablanca", "Rabat", "Tanger"];
+    
+    var filteredCities = cities.filter(city => city !== departureCity);
+    
+    filteredCities.forEach(city => {
+      var option = document.createElement('option');
+      option.value = city;
+      option.textContent = city;
+      arrivalSelect.appendChild(option);
+    });
+  });
+
+  document.getElementById('name_truck').addEventListener('change', function() {
+    var truckId = this.value; 
+    var departureCity = document.getElementById('locationstart').value;
+    var arrivalCity = document.getElementById('locationend').value; 
+    var dateStartInput = document.getElementById('datestart');
+    var dateEndInput = document.getElementById('dateend');
+
+    if (truckId && departureCity && arrivalCity) {
+      fetch(`/get-occupied-dates/${truckId}/?departure_city=${departureCity}&arrival_city=${arrivalCity}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des plages de temps occupées');
+          }
+          return response.json();
+        })
+        .then(data => {
+          dateStartInput.addEventListener('change', function() {
+            var selectedDate = new Date(this.value);
+
+            var isOccupied = data.some(range => {
+              var start = new Date(range.start);
+              var end = new Date(range.end);
+              return selectedDate >= start && selectedDate <= end;
+            });
+
+            if (isOccupied) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Plage de temps occupée',
+                text: 'Cette plage de temps est déjà occupée. La durée de la livraison est : ' + data[0].duration,
+              });
+              this.value = '';
+            }
+          });
+
+          dateEndInput.addEventListener('change', function() {
+            var selectedDate = new Date(this.value);
+
+            var isOccupied = data.some(range => {
+              var start = new Date(range.start);
+              var end = new Date(range.end);
+              return selectedDate >= start && selectedDate <= end;
+            });
+
+            if (isOccupied) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Plage de temps occupée',
+                text: 'Cette plage de temps est déjà occupée. La durée de la livraison et return au ville est : ' + data[0].duration,
+              });
+              this.value = '';
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Erreur lors de la récupération des plages de temps occupées:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Une erreur s\'est produite lors de la récupération des plages de temps occupées.',
+          });
+        });
+    } else {
+      dateStartInput.value = '';
+      dateEndInput.value = '';
+    }
+  });
+
+  document.getElementById('locationstart').addEventListener('change', function() {
+    document.getElementById('name_truck').dispatchEvent(new Event('change'));
+  });
+
+  document.getElementById('locationend').addEventListener('change', function() {
+    document.getElementById('name_truck').dispatchEvent(new Event('change'));
+  });
+</script>
+{% endblock javascripts %}

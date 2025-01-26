@@ -1,0 +1,173 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Gérer les livraisons {% endblock title %}
+
+{% block content %}
+<style>
+    .table-action {
+      margin-right: 10px;
+    }
+</style>
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+                <div class="col-lg-6 col-7">
+                    <h6 class="h2 text-white d-inline-block mb-0">Gérer les livraisons</h6>
+                    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                        <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                            <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="">Livraisons</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Gérer les livraisons</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Gérer les livraisons</h3>
+                </div>
+                <div class="table-responsive py-4">
+                    <table class="table table-flush" id="datatable-basic-delivery">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom du camion</th>
+                                <th>Ville de départ</th>
+                                <th>Date de départ</th>
+                                <th>Ville d'arrivée</th>
+                                <th>Date d'arrivée</th>
+                                <th>Durée</th>
+                                <th>Numéro de téléphone</th>
+                                <th>Tonnage</th>
+                                <th>Transport chargé</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for delivery in deliveries %}
+                            <tr>
+                                <td>{{ delivery.id }}</td>
+                                <td>{{ delivery.name_truck }}</td>
+                                <td>{{ delivery.departure_city }}</td>
+                                <td>{{ delivery.departure_date}}</td> 
+                                <td>{{ delivery.arrival_city }}</td>
+                                <td>{{ delivery.arrival_date }}</td> 
+                                <td>
+                                    {% if delivery.duration_hours is not None %}
+                                        {{ delivery.duration_hours }} heures
+                                    {% else %}
+                                        0 heures
+                                    {% endif %}
+                                </td>
+                                <td>{{ delivery.phone_number }}</td>
+                                <td>{{ delivery.tonnage }}</td>
+                                <td>            
+                                    {% if delivery.loaded_trip == 0 %}
+                                        Non
+                                    {% else %}
+                                        Oui
+                                    {% endif %}
+                                </td>
+                                <td class="table-actions">
+                                    <a
+                                        href="{% url 'deliveryedit' delivery.id %}"
+                                        style="color: blue; font-size: 17px"
+                                        class="table-action"
+                                        data-toggle="tooltip"
+                                        title="Modifier"
+                                    >
+                                        <i class="fas fa-pen-square"></i>
+                                    </a>
+                                    <a
+                                        href="{% url 'delete_delivery' delivery.id %}"
+                                        style="color: red; font-size: 17px"
+                                        class="table-action table-action-delete"
+                                        data-toggle="tooltip"
+                                        title="Suppression"
+                                        onclick="confirmDelete(event, this.href)"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap4.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  $(document).ready(function () {
+      $('#datatable-basic-delivery').DataTable({
+          paging: true,
+          searching: true,
+          info: false,
+          lengthChange: false,
+          responsive: true,
+          order: [[0, 'asc']], 
+          columnDefs: [
+              { orderable: false, targets: [1, 2, 4, 5, 6, 7, 8, 9, 10] } 
+          ],
+          language: {
+              emptyTable: "Vide", 
+              zeroRecords: "Vide",
+              paginate: {
+                  previous: '<i class="fas fa-angle-left"></i>',
+                  next: '<i class="fas fa-angle-right"></i>'
+              },
+              search: "Recherche : ",
+              searchPlaceholder: "Recherche"
+          },
+      });
+
+
+      {% if messages %}
+       {% for message in messages %}
+        Swal.fire({
+          icon: '{{ message.tags }}',
+          title: '{{ message }}',
+          showConfirmButton: true,
+          timer: 3000
+        });
+      {% endfor %}
+    {% endif %}
+  });
+
+  function confirmDelete(event, url) {
+      event.preventDefault(); 
+      Swal.fire({
+          title: 'Êtes-vous sûr ?',
+          text: "Vous ne pourrez pas annuler cette action !",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Oui, supprimer !',
+          cancelButtonText: 'Annuler'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              window.location.href = url; 
+          }
+      });
+  }
+</script>
+{% endblock javascripts %}

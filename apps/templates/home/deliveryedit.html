@@ -1,0 +1,132 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Modifier la livraison {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-8 col-8">
+          <h6 class="h2 text-white d-inline-block mb-0">Modifier la livraison</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item">
+                  <a href="/"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item"><a href="">Livraisons</a></li>
+                <li class="breadcrumb-item"><a href="/home/deliverymanage.html">Gérer les livraisons</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Modifier livraison / {{ delivery.id }}</li>
+              </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mt--6">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3 class="mb-0">Modifier la livraison</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="truck">Camion</label>
+              {{ form.truck }}
+            </div>
+          </div>
+          <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-control-label" for="departure_city">Ville de départ</label>
+                <select name="departure_city" class="form-control" id="departure_city">
+                  <option value="">Choisissez une</option>
+                  <option value="Agadir" {% if delivery.departure_city == 'Agadir' %}selected{% endif %}>Agadir</option>
+                  <option value="Marrakech" {% if delivery.departure_city == 'Marrakech' %}selected{% endif %}>Marrakech</option>
+                  <option value="Casablanca" {% if delivery.departure_city == 'Casablanca' %}selected{% endif %}>Casablanca</option>
+                  <option value="Rabat" {% if delivery.departure_city == 'Rabat' %}selected{% endif %}>Rabat</option>
+                  <option value="Tanger" {% if delivery.departure_city == 'Tanger' %}selected{% endif %}>Tanger</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-control-label" for="arrival_city">Ville d'arrivée</label>
+                <select name="arrival_city" class="form-control" id="arrival_city">
+                  <option value="">Choisissez une</option>
+                  <option value="Agadir" {% if delivery.arrival_city == 'Agadir' %}selected{% endif %}>Agadir</option>
+                  <option value="Marrakech" {% if delivery.arrival_city == 'Marrakech' %}selected{% endif %}>Marrakech</option>
+                  <option value="Casablanca" {% if delivery.arrival_city == 'Casablanca' %}selected{% endif %}>Casablanca</option>
+                  <option value="Rabat" {% if delivery.arrival_city == 'Rabat' %}selected{% endif %}>Rabat</option>
+                  <option value="Tanger" {% if delivery.arrival_city == 'Tanger' %}selected{% endif %}>Tanger</option>
+                </select>
+              </div>
+            </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="departure_date">Date de départ</label>
+              {{ form.departure_date }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="arrival_date">Date d'arrivée</label>
+              {{ form.arrival_date }}
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="phone_number">N° de téléphone</label>
+              {{ form.phone_number }}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="tonnage">Tonnage (Kg)</label>
+              {{ form.tonnage }}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="custom-control custom-control-alternative custom-checkbox" style="padding: 40px; left: 150px">
+              <input class="custom-control-input" id="loaded_trip" name="loaded_trip" type="checkbox" {% if form.loaded_trip.value %}checked{% endif %}/>
+              <label class="custom-control-label" for="loaded_trip"> <span class="text-muted">Voyage chargé</span> </label>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ message.tags }}', 
+        title: '{{ message }}',
+        showConfirmButton: true,
+        timer: 3000
+      });
+    {% endfor %}
+  {% endif %}
+</script>
+{% endblock javascripts %}

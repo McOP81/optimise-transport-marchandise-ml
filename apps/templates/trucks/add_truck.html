@@ -1,0 +1,121 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Ajouter un camion {% endblock title %}
+
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="header bg-primary pb-6">
+      <div class="container-fluid">
+        <div class="header-body">
+          <div class="row align-items-center py-4">
+            <div class="col-lg-6 col-7">
+              <h6 class="h2 text-white d-inline-block mb-0">Ajouter un camion</h6>
+              <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                  <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                  <li class="breadcrumb-item"><a href="">Camion</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">Ajouter un camion</li>
+                </ol>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid mt--6">
+    
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3 class="mb-0">Ajouter un nouveau camion</h3>
+        </div>
+        <div class="card-body">
+         
+          <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label" for="name_truck">Nom du camion</label>
+                  <input type="text" name="name_truck" class="form-control" id="name_truck" placeholder="Nom du camion" required>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label" for="registration_number">Numéro d'immatriculation</label>
+                  <input type="text" name="registration_number" class="form-control" id="registration_number" placeholder="Numéro d'immatriculation" required >
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label" for="model">Modèle</label>
+                  <input type="text" name="model" class="form-control" id="model" placeholder="Modèle" required >
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label" for="location">Ville</label>
+                  <select name="location" class="form-control" id="location">
+                    <option value="">Choisissez une</option>
+                    <option value="Agadir">Agadir</option>
+                    <option value="Marrakech">Marrakech</option>
+                    <option value="Casablanca">Casablanca</option>
+                    <option value="Rabat">Rabat</option>
+                    <option value="Tanger">Tanger</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label" for="phone">N° de téléphone</label>
+                  <input type="tel" name="phone" class="form-control" id="phone" placeholder="0XXXXXXXXX" required >
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label" for="tonnage">Tonnage maximum (Kg)</label>
+                  <input class="form-control" name="tonnage" type="number" placeholder="Tonnage maximum (Kg)" id="tonnage" required >
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-control-label" for="insurance_date">Date d'assurance</label>
+                  <input class="form-control" name="insurance_date" type="date" id="insurance_date" required >
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-control-label" for="gray_card_date">Date de carte grise</label>
+                  <input class="form-control" name="gray_card_date" type="date" id="gray_card_date" required >
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Ajouter</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script src="/static/assets/vendor/clipboard/dist/clipboard.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message }}',
+        showConfirmButton: true,
+        timer: 3000
+      });
+    {% endfor %}
+  {% endif %}
+</script>
+{% endblock javascripts %}
