@@ -62,9 +62,17 @@
                                     <label class="form-control-label" for="nom_Camion">Nom Camion</label>
                                     <select name="nom_Camion" class="form-control" id="nom_Camion" required>
                                         <option value="">Choisissez un</option>
-                                        {% for truck in trucks %}
-                                        <option value="{{ truck.name_truck }}">{{ truck.name_truck }}</option>
-                                        {% endfor %}
+                                        {% if user.is_superuser %}
+                                            {% for truck in trucks %}
+                                                <option value="{{ truck.name_truck }}">{{ truck.name_truck }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for truck in trucks %}
+                                                {% if truck.id_user == user %}
+                                                    <option value="{{ truck.name_truck }}">{{ truck.name_truck }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
                                     </select>
                                 </div>
                             </div>

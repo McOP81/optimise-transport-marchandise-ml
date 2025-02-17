@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Truck, Delivery
+from .models import Truck, Delivery, Profile
 from django.contrib import messages
 from django.utils.timezone import now
 from .forms import TruckForm, DeliveryForm
@@ -488,16 +488,33 @@ def delaydelete(request, delivery_id):
     messages.success(request, 'Le retard a été supprimé avec succès.')
     return redirect('delaymanage')
 
+
 @login_required(login_url="/login/")
 def managedeliverynow(request):
     today = timezone.now().date()
-    deliveries = Delivery.objects.filter(departure_date__date=today) | Delivery.objects.filter(arrival_date__date=today)
+    
+    # Filtrer les livraisons en fonction des permissions
+    if request.user.is_superuser:
+        # Si superutilisateur, afficher toutes les livraisons du jour
+        deliveries = Delivery.objects.filter(departure_date__date=today) | Delivery.objects.filter(arrival_date__date=today)
+    elif request.user.is_staff:
+        # Si personnel, afficher uniquement les livraisons associées à ses propres camions
+        deliveries = Delivery.objects.filter(
+            (Q(departure_date__date=today) | Q(arrival_date__date=today)) & 
+            Q(truck__id_user=request.user)
+        )
+    else:
+        # Si ni superutilisateur ni personnel, ne montrer aucune livraison
+        deliveries = Delivery.objects.none()
+    
+    # Formater les données des livraisons
     formatted_deliveries = []
     for delivery in deliveries:
         duration_hours = None
         if delivery.arrival_date and delivery.departure_date:
             duration = delivery.arrival_date - delivery.departure_date
             duration_hours = int(duration.total_seconds() // 3600)
+        
         formatted_delivery = {
             'id': delivery.id,
             'name_truck': delivery.truck.name_truck,
@@ -509,11 +526,11 @@ def managedeliverynow(request):
             'tonnage': delivery.tonnage,
             'delay': delivery.delay,
             'phone_number': delivery.phone_number,
-            'tonnage': delivery.tonnage,
             'loaded_trip': delivery.loaded_trip,
             'arrival_delivery': delivery.arrival_delivery,
         }
         formatted_deliveries.append(formatted_delivery)
+    
     return render(request, 'home/managedeliverynow.html', {'deliveries': formatted_deliveries, 'segment': 'managedeliverynow'})
 
 @login_required(login_url="/login/")
@@ -651,7 +668,17 @@ def index(request):
 @login_required(login_url="/login/")
 def deliverynow_1(request):
     today = timezone.now().date()
-    deliveries = Delivery.objects.filter(arrival_date__date=today)
+
+    # Si l'utilisateur est superutilisateur, il peut voir toutes les livraisons
+    if request.user.is_superuser:
+        deliveries = Delivery.objects.filter(arrival_date__date=today)
+    # Si l'utilisateur est un membre du staff, il ne voit que ses propres livraisons
+    elif request.user.is_staff:
+        deliveries = Delivery.objects.filter(arrival_date__date=today, truck__id_user=request.user)
+    else:
+        # Autrement, on n'affiche aucune livraison pour les autres utilisateurs
+        deliveries = []
+
     formatted_deliveries = []
     for delivery in deliveries:
         duration_hours = None
@@ -676,7 +703,13 @@ def deliverynow_1(request):
             'weekend' : delivery.weekend,
         }
         formatted_deliveries.append(formatted_delivery)
-    return render(request, 'home/deliverynow_1.html', {'deliveries': formatted_deliveries, 'segment': 'deliverynow_1'})
+
+    return render(request, 'home/deliverynow_1.html', {
+        'deliveries': formatted_deliveries,
+        'segment': 'deliverynow_1'
+    })
+
+
 
 @login_required(login_url="/login/")
 def deliveryaccept(request, delivery_id):
@@ -706,10 +739,19 @@ def get_today_deliveries(request):
         truck_name = request.GET.get('truck_name')
         today = timezone.now().date()
 
+        # Filtrer les camions en fonction de l'utilisateur
+        if request.user.is_superuser:
+            # Superutilisateur voit tous les camions
+            trucks = Truck.objects.all()
+        else:
+            # Staff voit seulement ses propres camions
+            trucks = Truck.objects.filter(id_user=request.user)
+
         # Récupérer les livraisons pour le camion sélectionné et la date d'aujourd'hui
         deliveries = Delivery.objects.filter(
             truck__name_truck=truck_name,
-            departure_date__date=today
+            departure_date__date=today,
+            truck__in=trucks  # Filtrer les livraisons par les camions accessibles
         ).values('departure_city', 'arrival_city').distinct()
 
         # Formater les données pour la réponse JSON

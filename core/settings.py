@@ -7,6 +7,7 @@ import os
 from decouple import config
 from unipath import Path
 
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).parent
 CORE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -135,6 +136,10 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(CORE_DIR, 'apps/static'),
 )
+
+
+# WEATHER_API_KEY = 'b5d781306a67a0e57e641d1e7da9cf7e'
+# IPINFO_TOKEN = '497134d27b2122'
 
 
 #############################################################

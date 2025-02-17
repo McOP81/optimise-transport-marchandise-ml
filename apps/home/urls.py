@@ -39,6 +39,7 @@ urlpatterns = [
     path('predict-delay/<str:delivery_id>/', views.predict_delay, name='predict_delay'),
 
 
+
     re_path(r'^.*\.*', views.pages, name='pages'),
 
 ]
