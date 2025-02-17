@@ -28,7 +28,7 @@ from django.contrib.auth.hashers import make_password
 from .models import Profile
 from .forms import EditChauffeurForm 
 from django.http import JsonResponse
-
+from django.db.models.functions import ExtractMonth, ExtractWeekDay
 
 
 
@@ -204,11 +204,14 @@ def delete_delivery(request, delivery_id):
 def deliveryadd(request):
     trucks = Truck.objects.all()
 
-    if not hasattr(label_encoder, 'classes_'):
-        cities = Delivery.objects.values_list('departure_city', flat=True).distinct().union(
-        Delivery.objects.values_list('arrival_city', flat=True).distinct()
-    )
-        label_encoder.fit(cities)
+    # Mapping des villes
+    ville_mapping = {
+        "Casablanca": 1,
+        "Rabat": 3,
+        "Marrakech": 2,
+        "Tanger": 5,
+        "Agadir": 0
+    }
 
     if request.method == "POST":
         name_truck_id = request.POST.get('name_truck')
@@ -218,8 +221,8 @@ def deliveryadd(request):
         dateend_str = request.POST.get('dateend')
         phone = request.POST.get('phone')
         tonnage = request.POST.get('tonnage')
-        weekend = request.POST.get('weekend') == 'True'  # Convertir en booléen
-        jour_ferie = request.POST.get('jour_ferie') == 'True'  # Convertir en booléen
+        weekend = request.POST.get('weekend')
+        jour_ferie = request.POST.get('jour_ferie')
 
         if not (name_truck_id and locationstart and locationend and datestart_str and dateend_str):
             messages.error(request, "Veuillez remplir tous les champs obligatoires.")
@@ -240,25 +243,22 @@ def deliveryadd(request):
         duration_hours = (arrival_date - departure_date).total_seconds() / 3600
         duration_days = duration_hours / 24
 
-        # Vérifier si les villes existent dans le label_encoder
-        if locationstart not in label_encoder.classes_ or locationend not in label_encoder.classes_:
+        # Vérifier si les villes existent dans le mapping
+        if locationstart not in ville_mapping or locationend not in ville_mapping:
             messages.error(request, "Une ou plusieurs villes ne sont pas reconnues.")
             return redirect('deliveryadd')
 
+        # Récupérer les valeurs encodées pour les villes
+        ville_depart = ville_mapping.get(locationstart, -1)
+        ville_arrivee = ville_mapping.get(locationend, -1)
+
         input_data = pd.DataFrame({
-            'departure_city': [locationstart],
-            'arrival_city': [locationend],
+            'departure_city': [ville_depart],
+            'arrival_city': [ville_arrivee],
             'duration_hours': [duration_hours],
             'tonnage': [int(tonnage)],
             'duration_days': [duration_days],
         })
-
-        try:
-            input_data['departure_city'] = label_encoder.transform([locationstart])[0]
-            input_data['arrival_city'] = label_encoder.transform([locationend])[0]
-        except ValueError as e:
-            messages.error(request, f"Erreur lors de l'encodage des villes : {str(e)}")
-            return redirect('deliveryadd')
 
         try:
             loaded_trip = model.predict(input_data)[0]
@@ -520,20 +520,34 @@ def managedeliverynow(request):
 def index(request):
     total_trucks = Truck.objects.count()
     now = timezone.now()
-    deliveries_this_month = Delivery.objects.filter(
+
+    # Filtrer les livraisons en fonction du type d'utilisateur
+    if request.user.is_superuser:
+        # Pour les superutilisateurs, afficher toutes les livraisons
+        deliveries = Delivery.objects.all()
+    elif request.user.is_staff:
+        # Pour les utilisateurs staff, afficher uniquement leurs livraisons
+        deliveries = Delivery.objects.filter(truck__id_user=request.user)
+    else:
+        deliveries = Delivery.objects.none()  # Aucune livraison pour les autres utilisateurs
+
+    # Récupérer les données générales
+    deliveries_this_month = deliveries.filter(
         departure_date__year=now.year,
         departure_date__month=now.month,
         arrival_delivery=1
     ).count()
-    deliveries_this_month_loaded = Delivery.objects.filter(
+    deliveries_this_month_loaded = deliveries.filter(
         departure_date__year=now.year,
         departure_date__month=now.month,
         loaded_trip=True
     ).count()
-    unique_departure_cities = Delivery.objects.values('departure_city').distinct().count()
-    unique_arrival_cities = Delivery.objects.values('arrival_city').distinct().count()
+    unique_departure_cities = deliveries.values('departure_city').distinct().count()
+    unique_arrival_cities = deliveries.values('arrival_city').distinct().count()
     max_unique_cities = max(unique_departure_cities, unique_arrival_cities)
-    deliveries_by_month = Delivery.objects.filter(
+
+    # Récupérer les livraisons par mois
+    deliveries_by_month = deliveries.filter(
         departure_date__year=now.year
     ).annotate(
         month=ExtractMonth('departure_date')
@@ -543,9 +557,11 @@ def index(request):
     monthly_deliveries = [0] * 12
     for entry in deliveries_by_month:
         monthly_deliveries[entry['month'] - 1] = entry['count']
+
+    # Récupérer les livraisons par jour de la semaine
     start_of_week = now - timedelta(days=now.weekday())
     end_of_week = start_of_week + timedelta(days=6)
-    deliveries_by_day = Delivery.objects.filter(
+    deliveries_by_day = deliveries.filter(
         departure_date__date__gte=start_of_week.date(),
         departure_date__date__lte=end_of_week.date()
     ).annotate(
@@ -562,13 +578,15 @@ def index(request):
     adjusted_day_index = {
         2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 1: 6
     }
-    for entry in deliveries_by_day:
+    for entry in deliveries_by_day: 
         day_of_week = entry['day']
         day_index = adjusted_day_index[day_of_week]
         daily_deliveries[day_index] = entry['count']
         daily_labels[day_index] = f"{day_mapping[day_of_week]} ({entry['date'].strftime('%d/%m')})"
+
+    # Récupérer les retards par jour de la semaine
     delays_by_day = {day: 0 for day in ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']}
-    deliveries_this_week = Delivery.objects.filter(
+    deliveries_this_week = deliveries.filter(
         departure_date__date__gte=start_of_week.date(),
         departure_date__date__lte=end_of_week.date()
     )
@@ -583,10 +601,38 @@ def index(request):
                 continue
     days_of_week = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
     delays_data = [delays_by_day[day] for day in days_of_week]
+
+    # Récupérer les camions expirés
     today = date.today()
-    expired_trucks = Truck.objects.filter(
-        Q(gray_card_date__lte=today) | Q(insurance_date__lte=today)
+    if request.user.is_superuser:
+        # Pour les superutilisateurs, afficher tous les camions expirés
+        expired_trucks = Truck.objects.filter(
+            Q(gray_card_date__lte=today) | Q(insurance_date__lte=today))
+    elif request.user.is_staff:
+        # Pour les utilisateurs staff, afficher uniquement leurs camions expirés
+        expired_trucks = Truck.objects.filter(
+            Q(gray_card_date__lte=today) | Q(insurance_date__lte=today),
+            id_user=request.user
+        )
+    else:
+        expired_trucks = []
+
+    # Récupérer les livraisons du chauffeur pour aujourd'hui
+    today_deliveries = deliveries.filter(
+        departure_date__date=now.date()
     )
+
+    # Calculer le temps restant pour chaque livraison
+    delivery_timers = []
+    for delivery in today_deliveries:
+        time_remaining = delivery.arrival_date - now
+        if time_remaining.total_seconds() > 0:
+            delivery_timers.append({
+                'id': delivery.id,
+                'time_remaining': int(time_remaining.total_seconds())
+            })
+
+    # Contexte pour le template
     context = {
         'total_trucks': total_trucks,
         'deliveries_this_month': deliveries_this_month,
@@ -597,8 +643,10 @@ def index(request):
         'daily_deliveries': daily_deliveries,
         'daily_labels': daily_labels,
         'expired_trucks': expired_trucks,
+        'delivery_timers': delivery_timers,  # Ajout des timers pour les livraisons
     }
     return render(request, 'home/index.html', context)
+
 
 @login_required(login_url="/login/")
 def deliverynow_1(request):

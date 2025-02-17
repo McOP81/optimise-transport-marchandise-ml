@@ -75,32 +75,34 @@
           <h6 class="h2 text-white d-inline-block mb-0">Tableau de bord</h6>
         </div>
       </div>
-      {% if expired_trucks %}
-      <div class="row">
-        <div class="col-12">
-          <div id="expired-trucks-notification" class="custom-notification" role="alert">
-            <div class="notification-header">
-              <span class="notification-icon">⚠️</span>
-              <strong>Les papiers du véhicule fini</strong>
-              <button type="button" class="close-notification" aria-label="Fermer">
-                &times;
-              </button>
-            </div>
-            <div class="notification-body">
-              <p style="font-size:14px">Vous devez gérer la véhicule</p>
-              <ul>
-                {% for truck in expired_trucks %}
-                <li>
-                  Camion : {{ truck.name_truck }} - 
-                  Assurance: {{ truck.insurance_date|date:"Y-m-d" }} | 
-                  Carte Grise: {{ truck.gray_card_date|date:"Y-m-d" }}
-                </li>
-                {% endfor %}
-              </ul>
+      {% if user.is_superuser %}
+        {% if expired_trucks %}
+        <div class="row">
+          <div class="col-12">
+            <div id="expired-trucks-notification" class="custom-notification" role="alert">
+              <div class="notification-header">
+                <span class="notification-icon">⚠️</span>
+                <strong>Les papiers du véhicule fini</strong>
+                <button type="button" class="close-notification" aria-label="Fermer">
+                  &times;
+                </button>
+              </div>
+              <div class="notification-body">
+                <p style="font-size:14px">Vous devez gérer la véhicule</p>
+                <ul>
+                  {% for truck in expired_trucks %}
+                  <li>
+                    Camion : {{ truck.name_truck }} - 
+                    Assurance: {{ truck.insurance_date|date:"Y-m-d" }} | 
+                    Carte Grise: {{ truck.gray_card_date|date:"Y-m-d" }}
+                  </li>
+                  {% endfor %}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+        {% endif %}
       {% endif %}
       <div class="row">
         {% if user.is_superuser %}
@@ -178,6 +180,7 @@
         <div class="col-12">
           <div class="card">
             <div class="card-body">
+              <center><h5 class="card-title text-uppercase text-muted mb-0">Temps restant</h5></center>
               <div class="timer" id="timer">00:00:00</div>
             </div>
           </div>
@@ -249,17 +252,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    // Timer pour is_staff
     if (document.getElementById('timer')) {
-      let timer = 0;
+      const deliveryTimers = {{ delivery_timers|safe }};
       const timerElement = document.getElementById('timer');
 
       function updateTimer() {
-        const hours = Math.floor(timer / 3600);
-        const minutes = Math.floor((timer % 3600) / 60);
-        const seconds = timer % 60;
-        timerElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        timer++;
+        if (deliveryTimers.length > 0) {
+          let timer = deliveryTimers[0].time_remaining;
+
+          // Ajouter 1 heure
+          timer -= 3600; // 3600 secondes = 1 heure
+
+          const hours = Math.trunc(timer / 3600);
+          const minutes = Math.floor((timer % 3600) / 60);
+          const seconds = timer % 60;
+
+          timerElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+          if (deliveryTimers[0].time_remaining > 0) {
+            deliveryTimers[0].time_remaining--;
+          } else {
+            timerElement.textContent = "00:00:00";
+          }
+        }
       }
 
       setInterval(updateTimer, 1000);
