@@ -98,11 +98,31 @@
               <label class="form-control-label" for="tonnage">Tonnage (Kg)</label>
               {{ form.tonnage }}
             </div>
-          </div>
+          </div>          
           <div class="col-md-4">
             <div class="custom-control custom-control-alternative custom-checkbox" style="padding: 40px; left: 150px">
               <input class="custom-control-input" id="loaded_trip" name="loaded_trip" type="checkbox" {% if form.loaded_trip.value %}checked{% endif %}/>
               <label class="custom-control-label" for="loaded_trip"> <span class="text-muted">Voyage chargé</span> </label>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="weekend">Weekend</label>
+              <select name="weekend" class="form-control" id="weekend">
+                <option value="False" {% if delivery.weekend == 0 %}selected{% endif %}>No</option>
+                <option value="True" {% if delivery.weekend == 1 %}selected{% endif %}>Oui</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-control-label" for="jour_ferie">Jour ferie</label>
+              <select name="jour_ferie" class="form-control" id="jour_ferie">
+                <option value="False" {% if delivery.jour_ferie == 0 %}selected{% endif %}>No</option>
+                <option value="True" {% if delivery.jour_ferie == 1 %}selected{% endif %}>Oui</option>
+              </select>
             </div>
           </div>
         </div>

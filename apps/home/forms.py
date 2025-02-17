@@ -1,5 +1,7 @@
 from django import forms
 from .models import Truck,Delivery
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 class TruckForm(forms.ModelForm):
     class Meta:
@@ -41,7 +43,7 @@ class DeliveryForm(forms.ModelForm):
         model = Delivery
         fields = [
             'truck', 'departure_city', 'arrival_city', 'departure_date', 
-            'arrival_date', 'phone_number', 'tonnage', 'loaded_trip'
+            'arrival_date', 'phone_number', 'tonnage','weekend','jour_ferie', 'loaded_trip'
         ]
         widgets = {
             'truck': forms.Select(attrs={'class': 'form-control'}),
@@ -51,6 +53,8 @@ class DeliveryForm(forms.ModelForm):
             'arrival_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0XXXXXXXXX'}),
             'tonnage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Tonnage (Kg)'}),
+            'weekend': forms.Select(attrs={'class': 'form-control', 'placeholder': 'weekend'}),
+            'jour_ferie': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Jour ferie'}),
             'loaded_trip': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -72,3 +76,43 @@ class DeliveryForm(forms.ModelForm):
             })
 
         return cleaned_data
+
+class EditChauffeurForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'placeholder': 'Laisser vide pour ne pas modifier'}),
+        required=False,
+        label="Mot de passe"
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+        labels = {
+            'username': 'Nom du chauffeur',
+            'email': 'Email',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={'placeholder': 'Nom du chauffeur'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Email'}),
+        }
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if User.objects.filter(username=username).exclude(id=self.instance.id).exists():
+            raise ValidationError("Ce nom d'utilisateur est déjà pris.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if User.objects.filter(email=email).exclude(id=self.instance.id).exists():
+            raise ValidationError("Cet email est déjà utilisé.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get('password')
+        if password:
+            user.set_password(password)  # Hacher le mot de passe
+        if commit:
+            user.save()
+        return user

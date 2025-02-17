@@ -21,11 +21,24 @@ import joblib
 from sklearn.preprocessing import LabelEncoder
 import os
 from django.conf import settings
+from django.contrib.auth.models import User
+import random
+import string
+from django.contrib.auth.hashers import make_password
+from .models import Profile
+from .forms import EditChauffeurForm 
+from django.http import JsonResponse
 
 
-# Charger le modèle de machine learning
-MODEL_PATH = os.path.join(settings.BASE_DIR, 'random_forest_model.pkl')
-model = joblib.load(MODEL_PATH)
+
+
+# Chemin vers les modèles
+MODEL_PATH = os.path.join(settings.BASE_DIR, 'models', 'random_forest_model.pkl')
+RETARD_MODEL_PATH = os.path.join(settings.BASE_DIR, 'models', 'Random Forest_model_retard.pkl')
+
+# Charger les modèles
+model = joblib.load(MODEL_PATH)  # Modèle existant
+retard_model = joblib.load(RETARD_MODEL_PATH)  # Nouveau modèle pour prédire le retard
 
 # Initialiser le LabelEncoder
 label_encoder = LabelEncoder()
@@ -67,9 +80,11 @@ def delete_truck(request, truck_id):
     messages.success(request, "Le camion et les livraisons associées ont été supprimés avec succès !")
     return redirect('manage_trucks')
 
+
 @login_required(login_url="/login/")
 def add_truck(request):
     if request.method == "POST":
+        # Récupérer les données du formulaire
         name_truck = request.POST.get('name_truck')
         registration_number = request.POST.get('registration_number')
         model_truck = request.POST.get('model')
@@ -78,12 +93,24 @@ def add_truck(request):
         tonnage = request.POST.get('tonnage')
         insurance_date = request.POST.get('insurance_date')
         gray_card_date = request.POST.get('gray_card_date')
+        id_user = request.POST.get('name_chauffeur')  # Récupérer l'ID du chauffeur
+
+        # Vérifier si un camion avec le même nom ou numéro d'immatriculation existe déjà
         if Truck.objects.filter(name_truck=name_truck).exists():
             messages.error(request, "Il existe déjà un camion portant ce nom.")
             return redirect('add_truck')
         if Truck.objects.filter(registration_number=registration_number).exists():
             messages.error(request, "Un camion portant ce numéro d'immatriculation existe déjà.")
             return redirect('add_truck')
+
+        # Récupérer l'objet User correspondant au chauffeur
+        try:
+            id_user = User.objects.get(id=id_user, is_staff=True)
+        except User.DoesNotExist:
+            messages.error(request, "Le chauffeur sélectionné n'existe pas ou n'est pas valide.")
+            return redirect('add_truck')
+
+        # Créer et enregistrer le camion
         truck = Truck(
             name_truck=name_truck,
             registration_number=registration_number,
@@ -92,12 +119,20 @@ def add_truck(request):
             phone=phone,
             tonnage=tonnage,
             insurance_date=insurance_date,
-            gray_card_date=gray_card_date
+            gray_card_date=gray_card_date,
+            id_user=id_user  # Associer le chauffeur au camion
         )
         truck.save()
+
         messages.success(request, "Le camion a été ajouté avec succès !")
         return redirect('add_truck')
-    return render(request, 'trucks/add_truck.html', {'segment': 'add_truck'})
+
+    # Récupérer uniquement les utilisateurs avec is_staff = True pour la liste déroulante
+    users = User.objects.filter(is_staff=True)
+    return render(request, 'trucks/add_truck.html', {
+        'segment': 'add_truck',
+        'users': users,  # Passer les utilisateurs au template
+    })
 
 @login_required(login_url="/login/")
 def edit_truck(request, truck_id):
@@ -171,8 +206,8 @@ def deliveryadd(request):
 
     if not hasattr(label_encoder, 'classes_'):
         cities = Delivery.objects.values_list('departure_city', flat=True).distinct().union(
-            Delivery.objects.values_list('arrival_city', flat=True).distinct()
-        )
+        Delivery.objects.values_list('arrival_city', flat=True).distinct()
+    )
         label_encoder.fit(cities)
 
     if request.method == "POST":
@@ -183,6 +218,8 @@ def deliveryadd(request):
         dateend_str = request.POST.get('dateend')
         phone = request.POST.get('phone')
         tonnage = request.POST.get('tonnage')
+        weekend = request.POST.get('weekend') == 'True'  # Convertir en booléen
+        jour_ferie = request.POST.get('jour_ferie') == 'True'  # Convertir en booléen
 
         if not (name_truck_id and locationstart and locationend and datestart_str and dateend_str):
             messages.error(request, "Veuillez remplir tous les champs obligatoires.")
@@ -202,6 +239,11 @@ def deliveryadd(request):
 
         duration_hours = (arrival_date - departure_date).total_seconds() / 3600
         duration_days = duration_hours / 24
+
+        # Vérifier si les villes existent dans le label_encoder
+        if locationstart not in label_encoder.classes_ or locationend not in label_encoder.classes_:
+            messages.error(request, "Une ou plusieurs villes ne sont pas reconnues.")
+            return redirect('deliveryadd')
 
         input_data = pd.DataFrame({
             'departure_city': [locationstart],
@@ -236,6 +278,8 @@ def deliveryadd(request):
             phone_number=phone,
             tonnage=tonnage,
             loaded_trip=bool(loaded_trip),
+            weekend=weekend,
+            jour_ferie=jour_ferie,
             truck=truck
         )
         delivery.save()
@@ -313,14 +357,66 @@ def delayadd(request):
     if request.method == "POST":
         delivery_id = request.POST.get('id_Deliveries')
         delay = request.POST.get('delay')
-        if not delivery_id or not delay:
-            messages.error(request, "Veuillez remplir tous les champs requis.")
+
+        if not delivery_id:
+            messages.error(request, "Veuillez sélectionner une livraison.")
             return redirect('delayadd')
+
         delivery = get_object_or_404(Delivery, id=delivery_id)
-        delivery.delay = delay
-        delivery.save()
+
+        # Prédire le retard si l'utilisateur n'a pas saisi de valeur
+        if not delay:
+            try:
+                # Mapping des villes
+                ville_mapping = {
+                    "Casablanca": 1,
+                    "Rabat": 3,
+                    "Marrakech": 2,
+                    "Tanger": 5,
+                    "Agadir": 0
+                }
+
+                # Récupérer les valeurs encodées pour les villes
+                ville_depart = ville_mapping.get(delivery.departure_city, -1)
+                ville_arrivee = ville_mapping.get(delivery.arrival_city, -1)
+
+                if ville_depart == -1 or ville_arrivee == -1:
+                    messages.error(request, "Ville de départ ou d'arrivée non reconnue.")
+                    return redirect('delayadd')
+
+                # Calculer la durée réelle en minutes
+                duree_reelle = (delivery.arrival_date - delivery.departure_date).total_seconds() / 60
+
+                # Préparer les données pour la prédiction
+                input_data = pd.DataFrame({
+                    'Ville de depart': [ville_depart],
+                    'Ville d\'arrivee': [ville_arrivee],
+                    'Distance (km)': [100],  # Remplacez par la distance réelle si disponible
+                    'Poids (kg)': [delivery.tonnage],
+                    'Heure_depart': [delivery.departure_date.hour],
+                    'Heure_arrivee': [delivery.arrival_date.hour],
+                    'Weekend': [delivery.weekend],
+                    'Jour ferie': [delivery.jour_ferie],
+                    'Duree reelle (minutes)': [duree_reelle]
+                })
+
+                # Prédire le retard
+                predicted_delay = retard_model.predict(input_data)[0]
+                predicted_delay = int(predicted_delay)  # Convertir en entier
+                delay = predicted_delay  # Utiliser la valeur prédite
+                messages.info(request, f"Retard prédit : {predicted_delay} minutes.")
+            except Exception as e:
+                messages.error(request, f"Erreur lors de la prédiction du retard : {str(e)}")
+                return redirect('delayadd')
+
+        # Enregistrer le retard dans la base de données
+        delivery.delay = delay  # Utiliser la valeur prédite ou saisie
+        delivery.save()  # Sauvegarder l'objet Delivery
+
         messages.success(request, "Le retard a été ajouté avec succès.")
         return redirect('delayadd')
+
+    # Récupérer les livraisons sans retard
     deliveries = Delivery.objects.filter(delay__isnull=True)
     return render(request, 'delay/delayadd.html', {'deliveries': deliveries, 'segment': 'delayadd'})
 
@@ -479,7 +575,7 @@ def index(request):
     for delivery in deliveries_this_week:
         if delivery.delay:
             try:
-                delay_hours = int(delivery.delay.split()[0])
+                delay_hours = int(delivery.delay)
                 day_of_week = delivery.departure_date.strftime('%a')
                 day_key = {'Mon': 'Lun', 'Tue': 'Mar', 'Wed': 'Mer', 'Thu': 'Jeu', 'Fri': 'Ven', 'Sat': 'Sam', 'Sun': 'Dim'}[day_of_week]
                 delays_by_day[day_key] += delay_hours
@@ -528,6 +624,8 @@ def deliverynow_1(request):
             'tonnage': delivery.tonnage,
             'loaded_trip': delivery.loaded_trip,
             'arrival_delivery': delivery.arrival_delivery,
+            'jour_ferie': delivery.jour_ferie,
+            'weekend' : delivery.weekend,
         }
         formatted_deliveries.append(formatted_delivery)
     return render(request, 'home/deliverynow_1.html', {'deliveries': formatted_deliveries, 'segment': 'deliverynow_1'})
@@ -547,3 +645,169 @@ def deliveryrefuse(request, delivery_id):
     delivery.save()
     messages.success(request, 'Le statut de livraison a été mis à jour avec succès (non expédié).')
     return redirect('deliverynow_1')
+
+
+@login_required(login_url="/login/")
+def managedeliverynowtraject(request):
+    trucks = Truck.objects.all()
+    return render(request, 'home/managedeliverynowtraject.html', {'trucks': trucks, 'segment': 'managedeliverynowtraject'})
+
+@login_required(login_url="/login/")
+def get_today_deliveries(request):
+    if request.method == "GET":
+        truck_name = request.GET.get('truck_name')
+        today = timezone.now().date()
+
+        # Récupérer les livraisons pour le camion sélectionné et la date d'aujourd'hui
+        deliveries = Delivery.objects.filter(
+            truck__name_truck=truck_name,
+            departure_date__date=today
+        ).values('departure_city', 'arrival_city').distinct()
+
+        # Formater les données pour la réponse JSON
+        cities = [
+            {
+                'departure_city': delivery['departure_city'],
+                'arrival_city': delivery['arrival_city']
+            }
+            for delivery in deliveries
+        ]
+
+        return JsonResponse(cities, safe=False)
+
+
+
+@login_required(login_url="/login/")
+def add_chauffeur(request):
+    if request.method == "POST":
+        username = request.POST.get("name_chauffeur")
+        email = request.POST.get("email_chauffeur")
+        
+        # Vérifier si l'email ou le username existe déjà
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Ce nom d'utilisateur est déjà pris.")
+            return redirect('add_chauffeur')
+        
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Cet email est déjà utilisé.")
+            return redirect('add_chauffeur')
+        
+        # Générer un mot de passe aléatoire
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        hashed_password = make_password(password)
+
+        # Créer l'utilisateur
+        user = User.objects.create(
+            username=username,
+            email=email,
+            password=hashed_password,
+            is_superuser=False,
+            is_staff=True,
+            is_active=True
+        )
+        user.save()
+
+        # Créer un profil pour stocker le mot de passe en clair
+        Profile.objects.create(user=user, plain_password=password)
+
+        messages.success(request, "Le chauffeur a été ajouté avec succès.")
+        return redirect('add_chauffeur')
+
+    users = User.objects.all()
+    return render(request, 'home/add_chauffeur.html', {'users': users, 'today': datetime.now().date(), 'segment': 'add_chauffeur'})
+
+
+@login_required(login_url="/login/")
+def manage_chauffeurs(request):
+    users = User.objects.filter(is_staff=True, is_superuser=False)
+    user_data = []
+    for user in users:
+        profile = Profile.objects.get(user=user)
+        user_data.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'plain_password': profile.plain_password,  # Mot de passe en clair
+            'date_joined': user.date_joined
+        })
+    return render(request, 'home/manage_chauffeurs.html', {
+        'users': user_data,  # Passez les données au template
+        'segment': 'manage_chauffeurs'
+    })
+
+@login_required(login_url="/login/")
+def edit_chauffeur(request, chauffeur_id):
+    # Récupérer le chauffeur à modifier
+    chauffeur = get_object_or_404(User, id=chauffeur_id, is_staff=True, is_superuser=False)
+
+    if request.method == "POST":
+        # Remplir le formulaire avec les données POST et l'instance du chauffeur
+        form = EditChauffeurForm(request.POST, instance=chauffeur)
+        if form.is_valid():
+            form.save()  # Enregistrer les modifications
+            messages.success(request, "Le chauffeur a été modifié avec succès.")
+            return redirect('manage_chauffeurs')
+    else:
+        # Afficher le formulaire pré-rempli avec les données actuelles du chauffeur
+        form = EditChauffeurForm(instance=chauffeur)
+
+    # Passer le formulaire au template
+    context = {
+        'form': form,
+        'segment': 'edit_chauffeur'
+    }
+    return render(request, 'home/edit_chauffeur.html', context)
+    
+@login_required(login_url="/login/")
+def delete_chauffeur(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user.is_staff and not user.is_superuser:
+        user.delete()
+        messages.success(request, 'Chauffeur supprimé avec succès.')
+    else:
+        messages.error(request, 'Vous ne pouvez pas supprimer cet utilisateur.')
+    return redirect('manage_chauffeurs')  # Redirigez vers la page de gestion des chauffeurs
+
+
+@login_required(login_url="/login/")
+def predict_delay(request, delivery_id):
+    delivery = get_object_or_404(Delivery, id=delivery_id)
+
+    # Encoder les villes selon le mapping fourni
+    ville_mapping = {
+        "Casablanca": 1,
+        "Rabat": 3,
+        "Marrakech": 2,
+        "Tanger": 5,
+        "Agadir": 0
+    }
+
+    ville_depart = ville_mapping.get(delivery.departure_city, -1)
+    ville_arrivee = ville_mapping.get(delivery.arrival_city, -1)
+
+    if ville_depart == -1 or ville_arrivee == -1:
+        return JsonResponse({'error': 'Ville de départ ou d\'arrivée non reconnue.'}, status=400)
+
+    # Calculer la durée réelle en minutes
+    duree_reelle = (delivery.arrival_date - delivery.departure_date).total_seconds() / 60
+
+    # Préparer les données pour la prédiction
+    input_data = pd.DataFrame({
+        'Ville de depart': [ville_depart],
+        'Ville d\'arrivee': [ville_arrivee],
+        'Distance (km)': [0],  # Remplacez par la distance réelle si disponible
+        'Poids (kg)': [delivery.tonnage],
+        'Heure_depart': [delivery.departure_date.hour],
+        'Heure_arrivee': [delivery.arrival_date.hour],
+        'Weekend': [delivery.weekend],
+        'Jour ferie': [delivery.jour_ferie],
+        'Duree reelle (minutes)': [duree_reelle]
+    })
+
+    # Prédire le retard
+    try:
+        predicted_delay = retard_model.predict(input_data)[0]
+        predicted_delay = int(predicted_delay)  # Convertir en entier
+        return JsonResponse({'predicted_delay': predicted_delay})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

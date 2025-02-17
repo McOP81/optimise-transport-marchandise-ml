@@ -1,6 +1,6 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %} Gérer les livraisons {% endblock title %}
+{% block title %} Gérer les chauffeurs {% endblock title %}
 
 {% block content %}
 <style>
@@ -13,12 +13,12 @@
         <div class="header-body">
             <div class="row align-items-center py-4">
                 <div class="col-lg-9 col-9">
-                    <h6 class="h2 text-white d-inline-block mb-0">Gérer les livraisons</h6>
+                    <h6 class="h2 text-white d-inline-block mb-0">Gérer les chauffeurs</h6>
                     <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
                         <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
                             <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
-                            <li class="breadcrumb-item"><a href="">Livraisons</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Gérer les livraisons</li>
+                            <li class="breadcrumb-item"><a href="">Chauffeurs</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Gérer les chauffeurs</li>
                         </ol>
                     </nav>
                 </div>
@@ -32,71 +32,50 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="mb-0">Gérer les livraisons</h3>
+                    <h3 class="mb-0">Gérer les chauffeurs</h3>
                 </div>
                 <div class="table-responsive py-4">
                     <table class="table table-flush" id="datatable-basic-delivery">
                         <thead class="thead-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Nom du camion</th>
-                                <th>Ville de départ</th>
-                                <th>Date de départ</th>
-                                <th>Ville d'arrivée</th>
-                                <th>Date d'arrivée</th>
-                                <th>Durée</th>
-                                <th>Numéro de téléphone</th>
-                                <th>Tonnage</th>
-                                <th>Transport chargé</th>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Mot de passe</th>
+                                <th>Date de création</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for delivery in deliveries %}
+                            {% for user in users %}
                             <tr>
-                                <td>{{ delivery.id }}</td>
-                                <td>{{ delivery.name_truck }}</td>
-                                <td>{{ delivery.departure_city }}</td>
-                                <td>{{ delivery.departure_date}}</td> 
-                                <td>{{ delivery.arrival_city }}</td>
-                                <td>{{ delivery.arrival_date }}</td> 
-                                <td>
-                                    {% if delivery.duration_hours is not None %}
-                                        {{ delivery.duration_hours }} heures
-                                    {% else %}
-                                        0 heures
-                                    {% endif %}
-                                </td>
-                                <td>{{ delivery.phone_number }}</td>
-                                <td>{{ delivery.tonnage }}</td>
-                                <td>            
-                                    {% if delivery.loaded_trip == 0 %}
-                                        Non
-                                    {% else %}
-                                        Oui
-                                    {% endif %}
-                                </td>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.plain_password }}</td>
+                                <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
                                 <td class="table-actions">
                                     <a
-                                        href="{% url 'deliveryedit' delivery.id %}"
-                                        style="color: blue; font-size: 17px"
-                                        class="table-action"
-                                        data-toggle="tooltip"
-                                        title="Modifier"
+                                      href="{% url 'edit_chauffeur' user.id %}"
+                                      style="color: blue; font-size: 17px"
+                                      class="table-action"
+                                      data-toggle="tooltip"
+                                      title="Modifier"
                                     >
-                                        <i class="fas fa-pen-square"></i>
+                                      <i class="fas fa-pen-square"></i>
                                     </a>
+                                    &nbsp;
                                     <a
-                                        href="{% url 'delete_delivery' delivery.id %}"
-                                        style="color: red; font-size: 17px"
-                                        class="table-action table-action-delete"
-                                        data-toggle="tooltip"
-                                        title="Suppression"
-                                        onclick="confirmDelete(event, this.href)"
+                                    href="{% url 'delete_chauffeur' user.id %}"
+                                    style="color: red; font-size: 17px"
+                                    class="table-action table-action-delete"
+                                    data-toggle="tooltip"
+                                    title="Suppression"
+                                    onclick="confirmDelete(event, this.href)"
                                     >
-                                        <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash"></i>
                                     </a>
-                                </td>
+                                  </td>                               
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -125,7 +104,7 @@
           responsive: true,
           order: [[0, 'asc']], 
           columnDefs: [
-              { orderable: false, targets: [1, 2, 4, 5, 6, 7, 8, 9, 10] } 
+              { orderable: false, targets: [1, 2,3 , 4, 5] } 
           ],
           language: {
               emptyTable: "Vide", 

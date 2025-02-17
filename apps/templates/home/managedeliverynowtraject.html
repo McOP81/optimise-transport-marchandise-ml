@@ -1,0 +1,138 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Gérer les livraisons maintenant trajet{% endblock title %}
+
+{% block content %}
+<style>
+    .table-action {
+        margin-right: 10px;
+    }
+
+    .city-item {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+        transition: background-color 0.3s ease;
+    }
+
+    .city-item:hover {
+        background-color: #f1f1f1;
+    }
+
+    .btn {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+                <div class="col-lg-9 col-9">
+                    <h6 class="h2 text-white d-inline-block mb-0"><i class="fas fa-truck"></i> Trajets aujourd'hui</h6>
+                    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                        <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                            <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="">Livraisons aujourd'hui</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Trajets aujourd'hui</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt--6">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Trajets aujourd'hui</h3>
+      </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-control-label" for="nom_Camion">Nom Camion</label>
+                                    <select name="nom_Camion" class="form-control" id="nom_Camion" required>
+                                        <option value="">Choisissez un</option>
+                                        {% for truck in trucks %}
+                                        <option value="{{ truck.name_truck }}">{{ truck.name_truck }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="cities-list" class="mt-4">
+                        <!-- Les villes de départ et d'arrivée seront affichées ici -->
+                    </div>
+
+                    {% comment %} <!-- Boutons d'action -->
+                    <div class="action-buttons mt-4">
+                        <button class="btn btn-success animate__animated animate__pulse"><i class="fas fa-plus"></i> Ajouter</button>
+                        <button class="btn btn-warning animate__animated animate__pulse"><i class="fas fa-edit"></i> Modifier</button>
+                        <button class="btn btn-danger animate__animated animate__pulse"><i class="fas fa-trash"></i> Supprimer</button>
+                    </div> {% endcomment %}
+                {% comment %} </div>
+            </div> {% endcomment %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap4.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).ready(function() {
+    // Écouter le changement de sélection du camion
+    $('#nom_Camion').change(function() {
+        var truckName = $(this).val();
+        if (truckName) {
+            // Faire une requête AJAX pour récupérer les villes de départ et d'arrivée
+            $.ajax({
+                url: "{% url 'get_today_deliveries' %}",
+                type: "GET",
+                data: {
+                    'truck_name': truckName
+                },
+                success: function(response) {
+                    var citiesList = $('#cities-list');
+                    citiesList.empty(); // Vider la liste actuelle
+
+                    if (response.length > 0) {
+                        // Ajouter chaque ville à la liste avec animation
+                        response.forEach(function(city) {
+                            citiesList.append(
+                                '<div class="city-item animate__animated animate__fadeInUp">' +
+                                '<p><i class="fas fa-map-pin"></i> Départ: ' + city.departure_city + ' → Arrivée: ' + city.arrival_city + '</p>' +
+                                '</div>'
+                            );
+                        });
+                    } else {
+                        citiesList.append('<p class="animate__animated animate__fadeIn"><i class="fas fa-exclamation-circle"></i> Aucune livraison trouvée pour ce camion aujourd\'hui.</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Erreur lors de la récupération des villes : " + error);
+                }
+            });
+        } else {
+            $('#cities-list').empty(); // Vider la liste si aucun camion n'est sélectionné
+        }
+    });
+});
+</script>
+{% endblock javascripts %}

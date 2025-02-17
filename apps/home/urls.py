@@ -27,9 +27,16 @@ urlpatterns = [
     path('delay/delaydelete/<str:delivery_id>/', views.delaydelete, name='delaydelete'),
     path('delay/delayupdate/<str:delivery_id>/', views.delayupdate, name='delayupdate'),
     path('home/managedeliverynow.html', views.managedeliverynow, name='managedeliverynow'),
+    path('home/managedeliverynowtraject.html', views.managedeliverynowtraject, name='managedeliverynowtraject'),
+    path('get-today-deliveries/', views.get_today_deliveries, name='get_today_deliveries'),
     path('home/deliverynow_1.html', views.deliverynow_1, name='deliverynow_1'),
     path('home/deliveryaccept/<str:delivery_id>/', views.deliveryaccept, name='deliveryaccept'),
     path('home/deliveryrefuse/<str:delivery_id>/', views.deliveryrefuse, name='deliveryrefuse'),
+    path('home/add_chauffeur.html', views.add_chauffeur, name='add_chauffeur'),
+    path('home/manage_chauffeurs.html', views.manage_chauffeurs, name='manage_chauffeurs'),
+    path('home/edit_chauffeur/<int:chauffeur_id>/', views.edit_chauffeur, name='edit_chauffeur'),
+    path('home/delete/<int:user_id>/', views.delete_chauffeur, name='delete_chauffeur'),
+    path('predict-delay/<str:delivery_id>/', views.predict_delay, name='predict_delay'),
 
 
     re_path(r'^.*\.*', views.pages, name='pages'),

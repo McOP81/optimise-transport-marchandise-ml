@@ -56,221 +56,251 @@
   .close-notification:hover {
     opacity: 1;
   }
+
+  .timer {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+  }
 </style>
 {% endblock stylesheets %}
 
 {% block content %}
-    <div class="header bg-primary pb-6">
-      <div class="container-fluid">
-        <div class="header-body">
-          <div class="row align-items-center py-4">
-            <div class="col-lg-6 col-7">
-              <h6 class="h2 text-white d-inline-block mb-0">Tableau de bord</h6>
-            </div>
-          </div>
-                    {% if expired_trucks %}
-                    <div class="row">
-                      <div class="col-12">
-                        <div id="expired-trucks-notification" class="custom-notification" role="alert">
-                          <div class="notification-header">
-                            <span class="notification-icon">⚠️</span>
-                            <strong>Les papiers du véhicule fini</strong>
-                            <button type="button" class="close-notification" aria-label="Fermer">
-                              &times;
-                            </button>
-                          </div>
-                          <div class="notification-body">
-                            <p style="font-size:14px">Vous devez gérer la véhicule</p>
-                            <ul>
-                              {% for truck in expired_trucks %}
-                              <li>
-                                Camion : {{ truck.name_truck }} - 
-                                Assurance: {{ truck.insurance_date|date:"Y-m-d" }} | 
-                                Carte Grise: {{ truck.gray_card_date|date:"Y-m-d" }}
-                              </li>
-                              {% endfor %}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {% endif %}
-          <div class="row">
-            <div class="col-xl-3 col-md-6">
-              <div class="card card-stats">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col">
-                      <h5 class="card-title text-uppercase text-muted mb-0">Camion total disponible</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ total_trucks }}</span>
-                    </div>
-                    <div class="col-auto">
-                      <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
-                        <i class="ni ni-bus-front-12"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="mt-3 mb-0 text-sm">
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card card-stats">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col">
-                      <h5 class="card-title text-uppercase text-muted mb-0">Expidation reçu par moins</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ deliveries_this_month }}</span>
-                    </div>
-                    <div class="col-auto">
-                      <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
-                        <i class="ni ni-check-bold"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="mt-3 mb-0 text-sm">
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card card-stats">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col">
-                      <h5 class="card-title text-uppercase text-muted mb-0">Livraisons charger par mois</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ deliveries_this_month_loaded }}</span>
-                    </div>
-                    <div class="col-auto">
-                      <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
-                        <i class="ni ni-calendar-grid-58"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="mt-3 mb-0 text-sm">
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card card-stats">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col">
-                      <h5 class="card-title text-uppercase text-muted mb-0">Ville total disponible</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ max_unique_cities }}</span>
-                    </div>
-                    <div class="col-auto">
-                      <div class="icon icon-shape bg-gradient-info text-white rounded-circle shadow">
-                        <i class="ni ni-world"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="mt-3 mb-0 text-sm">
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+<div class="header bg-primary pb-6">
+  <div class="container-fluid">
+    <div class="header-body">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-6 col-7">
+          <h6 class="h2 text-white d-inline-block mb-0">Tableau de bord</h6>
         </div>
       </div>
-    </div>
-    <div class="container-fluid mt--6">
+      {% if expired_trucks %}
       <div class="row">
-        <div class="col-xl-7">
-          <div class="card bg-default">
-            <div class="card-header bg-transparent">
-              <div class="row align-items-center">
-                <div class="col">
-                  <h6 class="text-light text-uppercase ls-1 mb-1">Performance</h6>
-                  <h5 class="h3 text-white mb-0">Valeur de livraison</h5>
-                </div>
-                <div class="col">
-                  <ul class="nav nav-pills justify-content-end">
-                    <li class="nav-item mr-2 mr-md-0">
-                      <a href="#" class="nav-link py-2 px-3 active" data-toggle="tab" id="month-tab">
-                        <span class="d-none d-md-block">Moins</span>
-                        <span class="d-md-none">M</span>
-                      </a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="#" class="nav-link py-2 px-3" data-toggle="tab" id="week-tab">
-                        <span class="d-none d-md-block">Jours</span>
-                        <span class="d-md-none">W</span>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+        <div class="col-12">
+          <div id="expired-trucks-notification" class="custom-notification" role="alert">
+            <div class="notification-header">
+              <span class="notification-icon">⚠️</span>
+              <strong>Les papiers du véhicule fini</strong>
+              <button type="button" class="close-notification" aria-label="Fermer">
+                &times;
+              </button>
             </div>
-            <div class="card-body">
-              <!-- Chart -->
-              <div class="chart">
-                <canvas id="chart-sales-dark" class="chart-canvas"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-5">
-          <div class="card">
-            <div class="card-header bg-transparent">
-              <div class="row align-items-center">
-                <div class="col">
-                  <h6 class="text-uppercase text-muted ls-1 mb-1">Aperçu</h6>
-                  <h5 class="h3 mb-0">Retard Total</h5>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="chart">
-                <canvas id="chart-bars" class="chart-canvas"></canvas>
-              </div>
+            <div class="notification-body">
+              <p style="font-size:14px">Vous devez gérer la véhicule</p>
+              <ul>
+                {% for truck in expired_trucks %}
+                <li>
+                  Camion : {{ truck.name_truck }} - 
+                  Assurance: {{ truck.insurance_date|date:"Y-m-d" }} | 
+                  Carte Grise: {{ truck.gray_card_date|date:"Y-m-d" }}
+                </li>
+                {% endfor %}
+              </ul>
             </div>
           </div>
         </div>
       </div>
-
-      {% include "includes/footer.html" %}
+      {% endif %}
+      <div class="row">
+        {% if user.is_superuser %}
+        <!-- Contenu pour is_superuser -->
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="row">
+                <div class="col">
+                  <h5 class="card-title text-uppercase text-muted mb-0">Camion total disponible</h5>
+                  <span class="h2 font-weight-bold mb-0">{{ total_trucks }}</span>
+                </div>
+                <div class="col-auto">
+                  <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
+                    <i class="ni ni-bus-front-12"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="row">
+                <div class="col">
+                  <h5 class="card-title text-uppercase text-muted mb-0">Expidation reçu par moins</h5>
+                  <span class="h2 font-weight-bold mb-0">{{ deliveries_this_month }}</span>
+                </div>
+                <div class="col-auto">
+                  <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
+                    <i class="ni ni-check-bold"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="row">
+                <div class="col">
+                  <h5 class="card-title text-uppercase text-muted mb-0">Livraisons charger par mois</h5>
+                  <span class="h2 font-weight-bold mb-0">{{ deliveries_this_month_loaded }}</span>
+                </div>
+                <div class="col-auto">
+                  <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
+                    <i class="ni ni-calendar-grid-58"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="row">
+                <div class="col">
+                  <h5 class="card-title text-uppercase text-muted mb-0">Ville total disponible</h5>
+                  <span class="h2 font-weight-bold mb-0">{{ max_unique_cities }}</span>
+                </div>
+                <div class="col-auto">
+                  <div class="icon icon-shape bg-gradient-info text-white rounded-circle shadow">
+                    <i class="ni ni-world"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% elif user.is_staff %}
+        <!-- Contenu pour is_staff -->
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="timer" id="timer">00:00:00</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
     </div>
-
+  </div>
+</div>
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col-xl-7">
+      <div class="card bg-default">
+        <div class="card-header bg-transparent">
+          <div class="row align-items-center">
+            <div class="col">
+              <h6 class="text-light text-uppercase ls-1 mb-1">Performance</h6>
+              <h5 class="h3 text-white mb-0">Valeur de livraison</h5>
+            </div>
+            <div class="col">
+              <ul class="nav nav-pills justify-content-end">
+                <li class="nav-item mr-2 mr-md-0">
+                  <a href="#" class="nav-link py-2 px-3 active" data-toggle="tab" id="month-tab">
+                    <span class="d-none d-md-block">Moins</span>
+                    <span class="d-md-none">M</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link py-2 px-3" data-toggle="tab" id="week-tab">
+                    <span class="d-none d-md-block">Jours</span>
+                    <span class="d-md-none">W</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Chart -->
+          <div class="chart">
+            <canvas id="chart-sales-dark" class="chart-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-5">
+      <div class="card">
+        <div class="card-header bg-transparent">
+          <div class="row align-items-center">
+            <div class="col">
+              <h6 class="text-uppercase text-muted ls-1 mb-1">Aperçu</h6>
+              <h5 class="h3 mb-0">Retard Total</h5>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart">
+            <canvas id="chart-bars" class="chart-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include "includes/footer.html" %}
+</div>
 {% endblock content %}
+
 {% block javascripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    var ctx = document.getElementById('chart-bars').getContext('2d');
-    var myChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-        datasets: [{
-          label: 'Retard total (minutes)',
-          data: {{ delays_data|safe }},
-          backgroundColor: '#8965e0',
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Minutes de retard'
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Jours de la semaine'
+    // Timer pour is_staff
+    if (document.getElementById('timer')) {
+      let timer = 0;
+      const timerElement = document.getElementById('timer');
+
+      function updateTimer() {
+        const hours = Math.floor(timer / 3600);
+        const minutes = Math.floor((timer % 3600) / 60);
+        const seconds = timer % 60;
+        timerElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timer++;
+      }
+
+      setInterval(updateTimer, 1000);
+    }
+
+    // Charts pour is_superuser
+    if (document.getElementById('chart-bars')) {
+      var ctx = document.getElementById('chart-bars').getContext('2d');
+      var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+          datasets: [{
+            label: 'Retard total (minutes)',
+            data: {{ delays_data|safe }},
+            backgroundColor: '#8965e0',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Minutes de retard'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Jours de la semaine'
+              }
             }
           }
         }
-      }
-    });
+      });
+    }
 
+    // Autres scripts pour les graphiques
     var salesChart;
     var $chart = document.getElementById('chart-sales-dark');
 
@@ -317,7 +347,7 @@
           }
         },
         data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], // 12 mois
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
           datasets: [{
             label: 'Livraisons',
             data: monthData,
@@ -333,36 +363,9 @@
       });
     }
 
-    function updateChart(data, labels) {
-      salesChart.data.datasets[0].data = data;
-      salesChart.data.labels = labels;
-      salesChart.update();
-    }
-
     if ($chart) {
       initChart();
-      document.getElementById('month-tab').addEventListener('click', function (e) {
-        e.preventDefault();
-        updateChart(monthData, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-      });
-      document.getElementById('week-tab').addEventListener('click', function (e) {
-        e.preventDefault();
-        updateChart(weekData, ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']);
-      });
     }
   });
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const closeButton = document.querySelector('.close-notification');
-      if (closeButton) {
-        closeButton.addEventListener('click', function () {
-          const notification = document.getElementById('expired-trucks-notification');
-          if (notification) {
-            notification.style.display = 'none';
-          }
-        });
-      }
-    });
 </script>
 {% endblock javascripts %}

@@ -16,7 +16,7 @@
 </head>
 
 <body class="">
-  {% if request.resolver_match.url_name != 'edit_truck' and request.resolver_match.url_name != 'deliveryedit' and request.resolver_match.url_name != 'map_delivery' and request.resolver_match.url_name != 'delayupdate'%}
+  {% if request.resolver_match.url_name != 'edit_truck' and request.resolver_match.url_name != 'deliveryedit' and request.resolver_match.url_name != 'map_delivery' and request.resolver_match.url_name != 'delayupdate' and request.resolver_match.url_name != 'edit_chauffeur'%}
       {% include "includes/sidenav.html" %}
   {% endif %}
 

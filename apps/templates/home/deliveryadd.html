@@ -92,16 +92,34 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="form-group">
               <label class="form-control-label" for="phone">N° de téléphone</label>
               <input type="tel" name="phone" class="form-control" id="phone" placeholder="0XXXXXXXXX" required />
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="form-group">
               <label class="form-control-label" for="tonnage">Tonnage (Kg)</label>
               <input class="form-control" name="tonnage" type="number" placeholder="Tonnage (Kg)" id="tonnage" required />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label class="form-control-label" for="weekend">Weekend</label>
+              <select name="weekend" class="form-control" id="weekend" required>
+                <option value="False">No</option>
+                <option value="True">Oui</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label class="form-control-label" for="jour_ferie">Jour ferie</label>
+              <select name="jour_ferie" class="form-control" id="jour_ferie" required>
+                <option value="False">No</option>
+                <option value="True">Oui</option>
+              </select>
             </div>
           </div>
           {% comment %} <div class="custom-control custom-control-alternative custom-checkbox" style="padding: 40px; left: 150px">

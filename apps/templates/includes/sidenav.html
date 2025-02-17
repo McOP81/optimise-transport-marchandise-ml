@@ -1,18 +1,47 @@
-<nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+<nav class="sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-white" id="sidenav-main">
   <div class="scrollbar-inner">
-    <div class="sidenav-header  align-items-center">
+    <div class="sidenav-header align-items-center">
       <a class="navbar-brand" href="/">
-        <img style="width : 23vh;min-height:9vh" src="/static/assets/img/brand/blue.png" class="navbar-brand-img" alt="Argon Design - Jinja Template Logo.">
+        <img style="width: 23vh; min-height: 9vh" src="/static/assets/img/brand/blue.png" class="navbar-brand-img" alt="Argon Design - Jinja Template Logo.">
       </a>
     </div>
-    <div class="navbar-inner" style="margin-top:3vh">
+    <div class="navbar-inner" style="margin-top: 3vh">
       <div class="collapse navbar-collapse" id="sidenav-collapse-main">
         <ul class="navbar-nav">
+          <!-- Tableau de bord - Visible pour tous -->
           <li class="nav-item">
-            <a class="nav-link {% if 'index' in segment %} active {% endif %}" href="/">
+            <a class="nav-link {% if 'home' in segment %} active {% endif %}" href="{% url 'home' %}">
               <i class="ni ni-tv-2 text-primary"></i>
               <span class="nav-link-text"> Tableau de bord </span>
             </a>
+          </li>
+
+          <!-- Arrivée des livraisons - Visible pour le staff -->
+          {% comment %} {% if user.is_staff %} {% endcomment %}
+
+          {% comment %} {% endif %} {% endcomment %}
+
+          <!-- Sections supplémentaires pour l'admin -->
+          {% if user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link {% if segment == 'add_chauffeur' or segment == 'manage_chauffeurs' %} active {% endif %}" href="#navbar-chauffeur" data-toggle="collapse" role="button" aria-expanded="{% if segment == 'add_chauffeur' or segment == 'manage_chauffeurs' %}true{% else %}false{% endif %}" aria-controls="navbar-chauffeur">
+              <i class="ni ni-single-02 text-black"></i>
+              <span class="nav-link-text"> Chauffeur </span>
+            </a>
+            <div class="collapse {% if segment == 'add_chauffeur' or segment == 'manage_chauffeurs' %}show{% endif %}" id="navbar-chauffeur" style="">
+              <ul class="nav nav-sm flex-column">
+                <li class="nav-item">
+                  <a href="{% url 'add_chauffeur' %}" class="nav-link {% if segment == 'add_chauffeur' %} active {% endif %}">
+                    <span class="sidenav-normal"> Ajouter un chauffeur </span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'manage_chauffeurs' %}" class="nav-link {% if segment == 'manage_chauffeurs' %} active {% endif %}">
+                    <span class="sidenav-normal"> Gérer les chauffeur </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </li>
           <li class="nav-item">
             <a class="nav-link {% if segment == 'add_truck' or segment == 'manage_trucks' %} active {% endif %}" href="#navbar-truck" data-toggle="collapse" role="button" aria-expanded="{% if segment == 'add_truck' or segment == 'manage_trucks' %}true{% else %}false{% endif %}" aria-controls="navbar-truck">
@@ -20,40 +49,42 @@
               <span class="nav-link-text"> Camions </span>
             </a>
             <div class="collapse {% if segment == 'add_truck' or segment == 'manage_trucks' %}show{% endif %}" id="navbar-truck" style="">
-                <ul class="nav nav-sm flex-column">
+              <ul class="nav nav-sm flex-column">
                 <li class="nav-item">
-                    <a href="{% url 'add_truck' %}" class="nav-link {% if segment == 'add_truck' %} active {% endif %}">
+                  <a href="{% url 'add_truck' %}" class="nav-link {% if segment == 'add_truck' %} active {% endif %}">
                     <span class="sidenav-normal"> Ajouter un camion </span>
-                    </a>
+                  </a>
                 </li>
                 <li class="nav-item">
                   <a href="{% url 'manage_trucks' %}" class="nav-link {% if segment == 'manage_trucks' %} active {% endif %}">
-                      <span class="sidenav-normal"> Gérer les camions </span>
+                    <span class="sidenav-normal"> Gérer les camions </span>
                   </a>
-              </li>              
-                </ul>
+                </li>
+              </ul>
             </div>
           </li>
+
           <li class="nav-item">
             <a class="nav-link {% if segment == 'deliveryadd' or segment == 'delivery_manage' %} active {% endif %}" href="#navbar-delivery" data-toggle="collapse" role="button" aria-expanded="{% if segment == 'deliveryadd' or segment == 'delivery_manage' %}true{% else %}false{% endif %}" aria-controls="navbar-delivery">
               <i class="ni ni-box-2 text-info"></i>
               <span class="nav-link-text"> Livraisons </span>
             </a>
             <div class="collapse {% if segment == 'deliveryadd' or segment == 'delivery_manage' %}show{% endif %}" id="navbar-delivery">
-                <ul class="nav nav-sm flex-column">
+              <ul class="nav nav-sm flex-column">
                 <li class="nav-item">
-                    <a href="{% url 'deliveryadd' %}" class="nav-link {% if segment == 'deliveryadd' %} active {% endif %}">
+                  <a href="{% url 'deliveryadd' %}" class="nav-link {% if segment == 'deliveryadd' %} active {% endif %}">
                     <span class="sidenav-normal"> Ajouter une livraison </span>
-                    </a>
+                  </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'delivery_manage' %}" class="nav-link {% if segment == 'delivery_manage' %} active {% endif %}">
+                  <a href="{% url 'delivery_manage' %}" class="nav-link {% if segment == 'delivery_manage' %} active {% endif %}">
                     <span class="sidenav-normal"> Gérer les livraisons </span>
-                    </a>
+                  </a>
                 </li>
-                </ul>
+              </ul>
             </div>
-          </li>   
+          </li>
+
           <li class="nav-item">
             <a class="nav-link {% if segment == 'delayadd' or segment == 'delaymanage' %} active {% endif %}" href="#navbar-delay" data-toggle="collapse" role="button" aria-expanded="{% if segment == 'delayadd' or segment == 'delaymanage' %}true{% else %}false{% endif %}" aria-controls="navbar-delay">
               <i class="ni ni-watch-time text-orange"></i>
@@ -73,28 +104,45 @@
                 </li>
               </ul>
             </div>
-          </li> 
+          </li>
+
+          
+          {% endif %}
           <li class="nav-item">
-            <a class="nav-link {% if 'managedeliverynow' in segment %} active {% endif %}" href="{% url 'managedeliverynow' %}">
+            <a class="nav-link {% if 'managedeliverynow' in segment or segment == 'managedeliverynowtraject' %} active {% endif %}" href="#navbar-deliverynow" data-toggle="collapse" role="button" aria-expanded="{% if segment == 'managedeliverynow' or segment == 'managedeliverynowtraject' %}true{% else %}false{% endif %}" aria-controls="navbar-deliverynow">
               <i class="ni ni-delivery-fast text-yellow"></i>
               <span class="nav-link-text"> Livraisons d'aujourd'hui </span>
             </a>
-          </li>    
+            <div class="collapse {% if segment == 'managedeliverynow' or segment == 'managedeliverynowtraject' %}show{% endif %}" id="navbar-deliverynow" style="">
+              <ul class="nav nav-sm flex-column">
+                <li class="nav-item">
+                  <a href="{% url 'managedeliverynow' %}" class="nav-link {% if segment == 'managedeliverynow' %} active {% endif %}">
+                    <span class="sidenav-normal"> Maps d'aujourd'hui </span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'managedeliverynowtraject' %}" class="nav-link {% if segment == 'managedeliverynowtraject' %} active {% endif %}">
+                    <span class="sidenav-normal"> Trajets d'aujourd'hui </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
           <li class="nav-item">
             <a class="nav-link {% if 'deliverynow_1' in segment %} active {% endif %}" href="{% url 'deliverynow_1' %}">
               <i class="ni ni-bag-17 text-black"></i>
               <span class="nav-link-text"> Arrivée des livraisons </span>
             </a>
-          </li>    
+          </li>
         </ul>
-        <hr class="my-3" >
+        <hr class="my-3">
         <ul class="navbar-nav mb-md-3">
           <li class="nav-item">
             <a class="nav-link active active-pro" href="{% url 'logout' %}">
               <i class="ni ni-user-run text-red"></i>
               <span class="nav-link-text">Se déconnecter</span>
             </a>
-          </li> 
+          </li>
         </ul>
       </div>
     </div>

@@ -42,6 +42,7 @@
                 <th>Modèle</th>
                 <th>Localisation</th>
                 <th>Tonnage maximum</th>
+                <th>chauffeur</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -54,6 +55,13 @@
                 <td style="color: red;">{{ truc.model }}</td>
                 <td style="color: red;">{{ truc.location }}</td>
                 <td style="color: red;">{{ truc.tonnage }} Kg</td>
+                <td>
+                  {% if truc.id_user %}
+                    {{ truc.id_user.username }}
+                  {% else %}
+                    Aucun chauffeur
+                  {% endif %}
+                </td>
                 <td class="table-actions">
                   <a
                     href="{% url 'edit_truck' truc.id %}"
@@ -84,6 +92,13 @@
                 <td style="color: orange;">{{ truc.model }}</td>
                 <td style="color: orange;">{{ truc.location }}</td>
                 <td style="color: orange;">{{ truc.tonnage }} Kg</td>
+                <td>
+                  {% if truc.id_user %}
+                    {{ truc.id_user.username }}
+                  {% else %}
+                    Aucun chauffeur
+                  {% endif %}
+                </td>
                 <td class="table-actions">
                   <a
                     href="{% url 'edit_truck' truc.id %}"
@@ -114,6 +129,13 @@
                 <td>{{ truc.model }}</td>
                 <td>{{ truc.location }}</td>
                 <td>{{ truc.tonnage }} Kg</td>
+                <td>
+                  {% if truc.id_user %}
+                    {{ truc.id_user.username }}
+                  {% else %}
+                    Aucun chauffeur
+                  {% endif %}
+                </td>
                 <td class="table-actions">
                   <a
                     href="{% url 'edit_truck' truc.id %}"

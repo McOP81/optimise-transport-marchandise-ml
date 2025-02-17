@@ -48,7 +48,9 @@
                                 <th>Tonnage</th>
                                 <th>Numéro de téléphone</th>
                                 <th>Transport chargé</th>
-                                <th>Action</th>
+                                {% if user.is_staff %}                          
+                                 <th>Action</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -84,9 +86,11 @@
                                         Oui
                                     {% endif %}
                                 </td>
+                                {% if user.is_staff %}                          
                                 <td>
                                     <a href="{% url 'deliveryaccept' delivery.id %}" style="color: green; font-size: 17px" class="table-action table-action-Accepte" data-toggle="tooltip" title="Accepter"><i class="ni ni-check-bold"></i></a>
                                 </td>
+                                {% endif %}
                             </tr>
                             {% else %}
                             <tr style="color: green; ">
@@ -118,10 +122,12 @@
                                     {% else %}
                                         Oui
                                     {% endif %}
-                                </td>                            
+                                </td>  
+                                {% if user.is_staff %}                          
                                 <td>
                                     <a href="{% url 'deliveryrefuse' delivery.id %}" style="color: red; font-size: 19px" class="table-action table-action-Refuse" data-toggle="tooltip" title="Refuser" onclick="confirmRefuse(event, this.href);"><i class="ni ni-fat-remove"></i></a>
                                 </td>
+                                {% endif %}
                             </tr>
                                 {% endif %} 
                             {% endfor %}

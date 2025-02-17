@@ -15,6 +15,8 @@ class Truck(models.Model):
     tonnage = models.IntegerField()
     insurance_date = models.DateField()
     gray_card_date = models.DateField()
+    id_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
 
     class Meta:
         db_table = 'truck'
@@ -32,7 +34,9 @@ class Delivery(models.Model):
     phone_number = models.CharField(max_length=20)
     tonnage = models.IntegerField()
     loaded_trip = models.BooleanField(default=False)
-    delay = models.CharField(max_length=255, null=True, blank=True)
+    delay = models.IntegerField(null=True, blank=True)
+    weekend = models.BooleanField(default=False)
+    jour_ferie = models.BooleanField(default=False)
     truck = models.ForeignKey(Truck, on_delete=models.CASCADE)
     arrival_delivery = models.BooleanField(default=False)
 
@@ -41,3 +45,8 @@ class Delivery(models.Model):
         
     def __str__(self):
         return f"Delivery from {self.departure_city} to {self.arrival_city}"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    plain_password = models.CharField(max_length=128, blank=True, null=True)

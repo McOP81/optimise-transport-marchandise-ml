@@ -86,18 +86,24 @@
         </div>
         
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <div class="form-group">
               <label class="form-control-label" for="insurance_date">Date d'assurance</label>
               <input class="form-control" name="insurance_date" type="date" id="insurance_date" value="{{ truck.insurance_date|date:'Y-m-d' }}" />
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <div class="form-group">
               <label class="form-control-label" for="gray_card_date">Date de carte grise</label>
               <input class="form-control" name="gray_card_date" type="date" id="gray_card_date" value="{{ truck.gray_card_date|date:'Y-m-d' }}" />
             </div>
           </div> 
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-control-label" for="name_chauffeur">Nom du chauffeur</label>
+              <input class="form-control" name="name_chauffeur" type="text" id="name_chauffeur" value="{{ truck.id_user.username }}" placeholder="Nom chauffeur" disabled/>
+            </div>
+          </div>
         </div>        
         <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
       </form>
